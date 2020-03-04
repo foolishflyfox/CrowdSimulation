@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 maximum-scale=1.0 user-scalable=no">
+    <title></title>
+</head>
+<body>
+<script src="js/three.min.js"></script>
+<!-- <script src="js/three.js"></script> -->
+<script src="js/Detector.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script src="js/Projector.js"></script>
+<script src="js/stats.min.js"></script>
+
+<!-- customic lib -->
+<script src="script/IndoorMap.js"></script>
+<script src="script/IndoorMap2d.js"></script>
+<script src="script/IndoorMap3d.js"></script>
+<script src="script/Theme.js"></script>
+<link href="css/indoor3D.css" rel="stylesheet">
+
+<div id="indoor3d" style="width: 800px; height: 500px; top:0px; left: 0px; position: absolute"></div>
+<script>
+
+    var params = {
+        // mapDiv:"indoor3d",
+        // dim:"2d"
+        // dim:"3d"
+        dim: "{{ showtype }}"
+    }
+    var map = IndoorMap(params);
+    var file_json;
+    // file_json = 'data/北京-7-侨福芳草地购物中心.json';
+    // file_json = 'data/mydata.json';
+    file_json = "{{ datafile }}";
+    // file_json = "./simulations/T-junction/geo.json";
+    map.load(file_json, function(){
+        //map.setTheme(testTheme);
+        map.showAreaNames(true).setSelectable(true);
+        var ul = IndoorMap.getUI(map);
+        document.body.appendChild(ul);
+        // map.showFloor(0);
+    });
+
+</script>
+<!-- buttons just for test-->
+<div class="testButton">
+<ul >
+    <li onclick="map.zoomIn(0.8)">+</li>
+    <li onclick="map.zoomOut(0.8)">-</li>
+    <!--<li onclick="map.setTopView()">Top View</li>-->
+    <li onclick="map.setDefaultView()">Default View</li>
+
+</ul>
+</div>
+</body>
+</html>
