@@ -288,7 +288,7 @@ def map_xml2json(simname, showtype=True):
     
     if(not os.path.isfile(outpath)):
         CreateMapJsonFile(inipath, outpath)
-    # return render_template('./simulate.html', datafile=outpath, showtype=showtype)
+    return render_template('./simulate.html', datafile=outpath, showtype=showtype)
     
     
 

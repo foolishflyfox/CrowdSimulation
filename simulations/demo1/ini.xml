@@ -32,7 +32,7 @@
             </outwall>
             
             <room>
-                <wall thickness="0.3">
+                <wall thickness="0.7">
                     <vertex px="20" py="10"/>
                     <vertex px="10" py="10"/>
                     <vertex px="10" py="40"/>
