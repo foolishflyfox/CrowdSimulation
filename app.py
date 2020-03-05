@@ -7,7 +7,8 @@ app = Flask(__name__, static_url_path='', static_folder='.')
 @app.route('/')
 def index():
     simulation_path = "./simulations"
-    simulations = os.listdir(simulation_path)
+    simulations = [f for f in os.listdir(simulation_path)
+                    if os.path.isdir(f"{simulation_path}/{f}")]
     return render_template('./index.html', simulations=simulations)
 
 @app.route('/simulation', methods=['GET'])
