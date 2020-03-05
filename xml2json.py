@@ -4,72 +4,66 @@ import json
 import random
 from flask import render_template
 
-from utils import GetLosseMaxRect, GetMaxRect, MaxRectBound
+from utils import *
 
-# 将一个 subroom 解析成一个 FuncArea 对象
-# subroom 是一个 xml.dom.minidom.Element 类型
-def parseSubroom(subroom):
-    # 如果属性不存在，getAttribute 返回一个空字符串
-    s_subroom_id = subroom.getAttribute('id')
-    polygons = subroom.getElementsByTagName('polygon')
-    obstacles = subroom.getElementsByTagName('obstacle')
-    sub_funcareas = []
-    for polygon in polygons:
-        t_caption = polygon.getAttribute('caption')
-        sub_funcarea = {}
-        if(s_subroom_id):
-            sub_funcarea['_id'] = int(s_subroom_id)
-        sub_funcarea['Wall'] = 'subroom'
-        sub_funcarea['Open'] = True
-        sub_funcarea['Outline'] = [[]]
-        points = []
-        vertexs = polygon.getElementsByTagName('vertex')
-        for vertex in vertexs:
-            points.append(float(vertex.getAttribute('px')))
-            points.append(float(vertex.getAttribute('py')))
-        sub_funcarea['Outline'][0].append(points)
-        sub_funcareas.append(sub_funcarea)
-    for obstacle in obstacles:
-        json_obstacle = {}
-        t_caption = polygon.getAttribute('caption')
-        if obstacle.getAttribute('id'):
-            json_obstacle['_id'] = int(obstacle.getAttribute('id'))
-        if polygon.getAttribute('closed') in ['', '1']:
-            json_obstacle['Open'] = False
-        else:
-            json_obstacle['Open'] = True
-        json_obstacle['Outline'] = [[]]
-        points = []
-        polygons = obstacle.getElementsByTagName('polygon')
-        if(len(polygons)==0): continue
-        vertexs = polygons[0].getElementsByTagName('vertex')
-        for vertex in vertexs:
-            points.append(float(vertex.getAttribute('px')))
-            points.append(float(vertex.getAttribute('py')))
-        json_obstacle['Outline'][0].append(points)
-        sub_funcareas.append(json_obstacle)
-        
-    return sub_funcareas
+
+wall_id = 1
+floorwall_thickness = 0.8
+roomwall_thickness = 0.4
+# wall 是一个 xml.dom.minidom.Element 类型
+def parseRoomWall(wall):
+    global wall_id
+    global roomwall_thickness
+
+    funcareas = []
+    cur_thickness = roomwall_thickness
+    if wall.getAttribute('thickness')!='':
+        cur_thickness = float(wall.getAttribute('thickness'))
+    vertexs = []
+    for tv in wall.getElementsByTagName('vertex'):
+        px = float(tv.getAttribute('px'))
+        py = float(tv.getAttribute('py'))
+        vertexs.append((px, py))
+    
+    for i in range(1, len(vertexs)):
+        wall_obj = {'id': wall_id}
+        wall_id += 1
+        wall_obj['thickness'] = cur_thickness
+        wall_obj['Open'] = False
+        p1 = vertexs[i-1]
+        p2 = vertexs[i]
+        normal_unit_v = UnitNormalVector(p1, p2)
+        dv = tuple(v * cur_thickness / 2.0 for v in normal_unit_v)
+        points = [
+            p1[0]+dv[0], p1[1]+dv[1],
+            p2[0]+dv[0], p2[1]+dv[1],
+            p2[0]-dv[0], p2[1]-dv[1],
+            p1[0]-dv[0], p1[1]-dv[1]
+        ]
+        wall_obj['Outline'] = [[points]]
+        funcareas.append(wall_obj)
+    return funcareas
 
 # crossings 是不同 subroom 之间的通路
-def parseCrossings(crossings):
-    json_crossings = []
-    crossings = crossings.getElementsByTagName('crossing')
-    for crossing in crossings:
-        json_crossing = {}
-        if crossing.getAttribute('id'):
-            json_crossing['_id'] = int(crossing.getAttribute('id'))
-        json_crossing['Wall'] = 'crossing'
-        json_crossing['Open'] = True
-        json_crossing['Outline'] = [[]]
-        points = []
-        vertexs = crossing.getElementsByTagName('vertex')
-        for vertex in vertexs:
-            points.append(float(vertex.getAttribute('px')))
-            points.append(float(vertex.getAttribute('py')))
-        json_crossing['Outline'][0].append(points)
-        json_crossings.append(json_crossing)
-    return json_crossings
+def parseCrossing(crossing):
+    json_crossing = {'Wall': 'crossing', 'Open': True}
+    json_crossing['Outline'] = [[[]]]
+    for tv in crossing.getElementsByTagName('vertex'):
+        px = float(tv.getAttribute('px'))
+        py = float(tv.getAttribute('py'))
+        json_crossing['Outline'][0][0].append(px)
+        json_crossing['Outline'][0][0].append(py)
+    return json_crossing
+
+def parseObstacle(obstacle):
+    json_obstacle = {}
+    json_obstacle['Open'] = False
+    points = []
+    for vertex in obstacle.getElementsByTagName('vertex'):
+        points.append(float(vertex.getAttribute('px')))
+        points.append(float(vertex.getAttribute('py')))
+    json_obstacle['Outline'] = [[points]]
+    return json_obstacle
 
 # transition 是不同 room 之间的通路
 def parseTransitions(transitions):
@@ -91,6 +85,55 @@ def parseTransitions(transitions):
         json_transitions.append(json_transition)
     return json_transitions
 
+def parseOutwall(outwall):
+    global wall_id
+    global floorwall_thickness
+
+    funcareas = []
+    cur_thickness = floorwall_thickness
+    xml_obj = outwall.firstChild
+    while xml_obj:
+        if xml_obj.nodeName == 'wall':
+            wall = xml_obj
+            if wall.getAttribute('thickness')!='':
+                cur_thickness = float(wall.getAttribute('thickness'))
+            else:
+                cur_thickness = floorwall_thickness
+            vertexs = []
+            for tv in wall.getElementsByTagName('vertex'):
+                px = float(tv.getAttribute('px'))
+                py = float(tv.getAttribute('py'))
+                vertexs.append((px, py))
+            for i in range(1, len(vertexs)):
+                wall_obj = {'id': wall_id}
+                wall_id += 1
+                wall_obj['thickness'] = cur_thickness
+                wall_obj['Open'] = False
+                p1 = vertexs[i-1]
+                p2 = vertexs[i]
+                normal_unit_v = UnitNormalVector(p1, p2)
+                dv = tuple(v * cur_thickness / 2.0 for v in normal_unit_v)
+                points = [
+                    p1[0]+dv[0], p1[1]+dv[1],
+                    p2[0]+dv[0], p2[1]+dv[1],
+                    p2[0]-dv[0], p2[1]-dv[1],
+                    p1[0]-dv[0], p1[1]-dv[1]
+                ]
+                wall_obj['Outline'] = [[points]]
+                funcareas.append(wall_obj)
+        elif xml_obj.nodeName == 'transition':
+            transition = xml_obj
+            json_transition = {'Wall': 'transition', 'Open': True}
+            json_transition['Outline'] = [[[]]]
+            for tv in transition.getElementsByTagName('vertex'):
+                px = float(tv.getAttribute('px'))
+                py = float(tv.getAttribute('py'))
+                json_transition['Outline'][0][0].append(px)
+                json_transition['Outline'][0][0].append(py)
+            funcareas.append(json_transition)
+        xml_obj = xml_obj.nextSibling
+    return funcareas
+
 def parseGoals(goals):
     json_goals = []
     goals = goals.getElementsByTagName('goal')
@@ -103,41 +146,12 @@ def parseGoals(goals):
         goal_funcarea['Open'] = False
         goal_funcarea['Outline'] = [[]]
         points = []
-        polygons = goal.getElementsByTagName('polygon')
-        if len(polygons)==0: continue
-        polygon = polygons[0]
-        for vertex in polygon.getElementsByTagName('vertex'):
+        for vertex in goal.getElementsByTagName('vertex'):
             points.append(float(vertex.getAttribute('px')))
             points.append(float(vertex.getAttribute('py')))
         goal_funcarea['Outline'][0].append(points)
         json_goals.append(goal_funcarea)
     return json_goals
-
-def parseTriangulateFile(filepath):
-    if not os.path.exists(filepath):
-        return []
-    json_triangles = []
-    edges = set()
-    with open(filepath) as f:
-        for line in f:
-            x1, y1, x2, y2 = [float(s) for s in line.split(' ')]
-            if x1 < x2:
-                edges.add((x1, y1, x2, y2))
-            elif x2 < x1:
-                edges.add((x2, y2, x1, y1))
-            else:
-                if y1 < y2:
-                    edges.add((x1, y1, x2, y2))
-                else:
-                    edges.add((x2, y2, x1, y1))
-    for x1,y1,x2,y2 in edges:
-        json_triangle = {}
-        json_triangle['Wall'] = 'triangle'
-        json_triangle['Open'] = True
-        json_triangle['Outline'] = [[[x1, y1, x2, y2]]]
-        json_triangles.append(json_triangle)
-    return json_triangles
-    
 
 # 求FuncAreas的外边界
 def GetFloorOutline(FuncAreas):
@@ -172,46 +186,59 @@ def CreateBuilding(Floors):
     building = {"Outline":[[[]]]}
     return building
 
-def CreateMapJsonFile(geoxml_path, geojson_path, jupedsim=None):
+def CreateMapJsonFile(inipath, outpath):
+    global floorwall_thickness
+    global roomwall_thickness
+
     result = {'data':{'Floors':[]}}
     Floors = result['data']['Floors']
 
-    dom = xml.dom.minidom.parse(geoxml_path)
-    geometry = dom.documentElement
-    # 一个 map 只能有一个rooms
-    rooms = geometry.getElementsByTagName('rooms')[0]
-    room_list = rooms.getElementsByTagName('room')
+    dom = xml.dom.minidom.parse(inipath)
+    sim = dom.documentElement
+    geometry = sim.getElementsByTagName('geometry')[0]
     
+    if len(sim.getElementsByTagName('scene')):
+        scene = sim.getElementsByTagName('scene')[0]
+        if len(scene.getElementsByTagName('floorwall')):
+            floorwall = scene.getElementsByTagName('floorwall')[0]
+            s = floorwall.getAttribute('thickness')
+            if s!='': floorwall_thickness = float(s)
+        if len(scene.getElementsByTagName('roomwall')):
+            roomwall = scene.getElementsByTagName('roomwall')[0]
+            s = roomwall.getAttribute('thickness')
+            if s!='': roomwall_thickness = float(s)
+    
+    floor = geometry.getElementsByTagName('floor')[0]
+
     FuncAreas = []
-    for room in room_list:
-        subrooms = room.getElementsByTagName('subroom')
-        for subroom in subrooms:
-            sub_funcareas = parseSubroom(subroom)
-            FuncAreas += sub_funcareas
-        crossingses = room.getElementsByTagName('crossings')
-        for crossings in crossingses:
-            json_crossings = parseCrossings(crossings)
-            FuncAreas += json_crossings
-    transitionses = geometry.getElementsByTagName('transitions')
-    for transitions in transitionses:
-        json_transitions = parseTransitions(transitions)
-        FuncAreas += json_transitions
+
+    for room in floor.getElementsByTagName('room'):
+        walls = room.getElementsByTagName('wall')
+        for wall in walls:
+            wall_funcareas = parseRoomWall(wall)
+            FuncAreas += wall_funcareas
+        crossings = room.getElementsByTagName('crossing')
+        for crossing in crossings:
+            json_crossing = parseCrossing(crossing)
+            FuncAreas.append(json_crossing)
+
+    for obstacle in floor.getElementsByTagName('obstacle'):
+        json_obstacle = parseObstacle(obstacle)
+        FuncAreas.append(json_obstacle)
+
+    FuncAreas += parseOutwall(floor.getElementsByTagName('outwall')[0])
 
     # 获取 <routing> 中的 <goal> 信息
-    simdir = os.path.dirname(geoxml_path)
-    if jupedsim is None:
-        inipath = f"{simdir}/ini.xml"
-        jupedsim = xml.dom.minidom.parse(inipath).documentElement
-    routings = jupedsim.getElementsByTagName('routing')
-    for routing in routings:
-        goalses = routing.getElementsByTagName('goals')
-        for goals in goalses:
-            json_goals = parseGoals(goals)
-            FuncAreas += json_goals
-
-    # 获取三角形化的信息
-    triangles = parseTriangulateFile(f"{simdir}/triangulate_result.txt")
-    FuncAreas += triangles
+    # simdir = os.path.dirname(geoxml_path)
+    # if jupedsim is None:
+    #     inipath = f"{simdir}/ini.xml"
+    #     jupedsim = xml.dom.minidom.parse(inipath).documentElement
+    # routings = jupedsim.getElementsByTagName('routing')
+    # for routing in routings:
+    goalses = floor.getElementsByTagName('goals')
+    for goals in goalses:
+        json_goals = parseGoals(goals)
+        FuncAreas += json_goals
 
     Floor = CreateFloor(FuncAreas)
 
@@ -247,23 +274,23 @@ def CreateMapJsonFile(geoxml_path, geojson_path, jupedsim=None):
     Floors.append(Floor)
     result['data']['building'] = CreateBuilding(Floors)
     # print(json.dumps(result, indent=2))
-    with open(geojson_path, 'w') as output:
+    with open(outpath, 'w') as output:
         json.dump(result, output, indent=2)
     
 
 def map_xml2json(simname, showtype=True):
     simdir = f"./simulations/{simname}"
     inipath = f"{simdir}/ini.xml"
-    dom = xml.dom.minidom.parse(inipath)
-    jupedsim = dom.documentElement
-    geometry = jupedsim.getElementsByTagName('geometry')[0]
-    geoname_xml = geometry.firstChild.data
-    geoname_json = os.path.splitext(geoname_xml)[0]+'.json'
-    geoxml_path = f"{simdir}/{geoname_xml}"
-    geojson_path = f"{simdir}/{geoname_json}"
-    if(not os.path.isfile(geojson_path)):
-        CreateMapJsonFile(geoxml_path, geojson_path, jupedsim)
-    return render_template('./simulate.html', datafile=geojson_path, showtype=showtype)
+    outpath = simdir+'/geo.json'
+
+    # dom = xml.dom.minidom.parse(inipath)
+    # sim = dom.documentElement
+    # geometry = sim.getElementsByTagName('geometry')
+    # floor = geometry.getElementsByTagName('floor')[0]
+    
+    if(not os.path.isfile(outpath)):
+        CreateMapJsonFile(inipath, outpath)
+    # return render_template('./simulate.html', datafile=outpath, showtype=showtype)
     
     
 

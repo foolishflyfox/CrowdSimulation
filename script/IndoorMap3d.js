@@ -272,9 +272,9 @@ IndoorMap3d = function(mapdiv){
 
     //select object(just hight light it)
     function select(obj){
-        obj.currentHex = _selected.material.color.getHex();
-        obj.material.color = new THREE.Color(_theme.selected);
-        obj.scale = new THREE.Vector3(2,2,2);
+        // obj.currentHex = _selected.material.color.getHex();
+        // obj.material.color = new THREE.Color(_theme.selected);
+        // obj.scale = new THREE.Vector3(2,2,2);
     }
 
     function onSelectObject(event) {

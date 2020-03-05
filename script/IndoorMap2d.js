@@ -236,16 +236,10 @@ IndoorMap2d = function(mapdiv){
     //select object(just hight light it)
     this.select = function(obj){
         if(obj != undefined) {
-            //_this.focus(obj);
             _selectedOldColor = obj.fillColor;
-            obj.fillColor = _theme.selected;
-            //var pos = _this.renderer.localToWorld(obj.Center);
+            // obj.fillColor = _theme.selected;
             _selected = obj;
             redraw();
-
-//            _marker.style.left = pos[0] - _marker.width / 2;
-//            _marker.style.top = pos[1] - _marker.height / 2;
-//            _marker.style.visibility = true;
         }
     }
 

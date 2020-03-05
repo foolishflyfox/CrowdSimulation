@@ -152,3 +152,16 @@ def MaxRectBound(outline, type):
         result = outline[5]
     return result
 
+def UnitNormalVector(point1, point2):
+    """
+    获取单位法向量
+    :param vector: 2个点, e.g. UnitNormalVector((0,0), (0, 1))
+    :return: 单位法向量
+    """
+    line12 = [v2-v1 for v1,v2 in zip(point1, point2)]
+    if line12[0]==0 and line12[1]==0:
+        return (0,0)
+    x, y = line12[0], line12[1]
+    normal_len = (y*y+x*x)**0.5
+    unit_normal = (y/normal_len, -x/normal_len)
+    return unit_normal
