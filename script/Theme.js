@@ -56,47 +56,47 @@ var default2dTheme = {
     
 
     //rooms' style
-    room: function (type, category) {
-        var roomStyle;
-        if(!category) {
-            switch (type) {
+    // room: function (type, category) {
+    //     var roomStyle;
+    //     if(!category) {
+    //         switch (type) {
 
-                case 100: //hollow. u needn't change this color. because i will make a hole on the model in the final version.
-                    return {
-                        color: "#F2F2F2",
-                        opacity: 0.8,
-                        transparent: true
-                    }
-                default :
-                    break;
-            }
-        }
+    //             case 100: //hollow. u needn't change this color. because i will make a hole on the model in the final version.
+    //                 return {
+    //                     color: "#F2F2F2",
+    //                     opacity: 0.8,
+    //                     transparent: true
+    //                 }
+    //             default :
+    //                 break;
+    //         }
+    //     }
 
-        switch(category) {
-            case 1: // final goal
-                roomStyle = {
-                    color: "#5dff00",
-                    opacity: 0.5,
-                    transparent: true
-                };
-                break;
-            case 2: // mid goal
-                roomStyle = {
-                    color: "#91c8ff",
-                    opacity: 0.5,
-                    transparent: true
-                };
-                break;
-            default :
-                roomStyle = {
-                    color: "#c49c94",
-                    opacity: 0.7,
-                    transparent: true
-                };
-                break;
-        }
-        return roomStyle;
-    },
+    //     switch(category) {
+    //         case 1: // final goal
+    //             roomStyle = {
+    //                 color: "#5dff00",
+    //                 opacity: 0.5,
+    //                 transparent: true
+    //             };
+    //             break;
+    //         case 2: // mid goal
+    //             roomStyle = {
+    //                 color: "#91c8ff",
+    //                 opacity: 0.5,
+    //                 transparent: true
+    //             };
+    //             break;
+    //         default :
+    //             roomStyle = {
+    //                 color: "#c49c94",
+    //                 opacity: 0.7,
+    //                 transparent: true
+    //             };
+    //             break;
+    //     }
+    //     return roomStyle;
+    // },
 
     //room wires' style
     strokeStyle: {
@@ -238,47 +238,47 @@ var default3dTheme = {
         return result;
     },
     //obstacle' style
-    obstacle: function (type, category) {
-        var roomStyle;
-        if(!category) {
-            switch (type) {
+    // obstacle: function (type, category) {
+    //     var roomStyle;
+    //     if(!category) {
+    //         switch (type) {
 
-                case 100: //hollow. u needn't change this color. because i will make a hole on the model in the final version.
-                    return {
-                        color: "#F2F2F2",
-                        opacity: 0.8,
-                        transparent: true
-                    }
-                default :
-                    break;
-            }
-        }
+    //             case 100: //hollow. u needn't change this color. because i will make a hole on the model in the final version.
+    //                 return {
+    //                     color: "#F2F2F2",
+    //                     opacity: 0.8,
+    //                     transparent: true
+    //                 }
+    //             default :
+    //                 break;
+    //         }
+    //     }
 
-        switch(category) {
-            case 1: // final goal
-                roomStyle = {
-                    color: "#00ff00",
-                    opacity: 0.5,
-                    transparent: true
-                };
-                break;
-            case 2: // mid goal
-                roomStyle = {
-                    color: "#0000ff",
-                    opacity: 0.5,
-                    transparent: true
-                };
-                break;
-            default :
-                roomStyle = {
-                    color: "#c49c94",
-                    opacity: 0.7,
-                    transparent: true
-                };
-                break;
-        }
-        return roomStyle;
-    },
+    //     switch(category) {
+    //         case 1: // final goal
+    //             roomStyle = {
+    //                 color: "#00ff00",
+    //                 opacity: 0.5,
+    //                 transparent: true
+    //             };
+    //             break;
+    //         case 2: // mid goal
+    //             roomStyle = {
+    //                 color: "#0000ff",
+    //                 opacity: 0.5,
+    //                 transparent: true
+    //             };
+    //             break;
+    //         default :
+    //             roomStyle = {
+    //                 color: "#c49c94",
+    //                 opacity: 0.7,
+    //                 transparent: true
+    //             };
+    //             break;
+    //     }
+    //     return roomStyle;
+    // },
 
     //room wires' style
     strokeStyle: {
@@ -295,7 +295,6 @@ var default3dTheme = {
     },
 
     pubPointImg: {
-
         "11001": System.imgPath+"/toilet.png",
         "11002": System.imgPath+"/ATM.png",
         "21001": System.imgPath+"/stair.png",

@@ -266,7 +266,7 @@ IndoorMap2d = function(mapdiv){
 
             if (_selected) {
                 _this.select(_selected)
-                console.log(_this.getSelectedId());
+                // console.log(_this.getSelectedId());
                 if (_selectionListener) {
                     _selectionListener(_this.getSelectedId());
                 }

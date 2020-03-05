@@ -272,9 +272,9 @@ IndoorMap3d = function(mapdiv){
 
     //select object(just hight light it)
     function select(obj){
-        // obj.currentHex = _selected.material.color.getHex();
-        // obj.material.color = new THREE.Color(_theme.selected);
-        // obj.scale = new THREE.Vector3(2,2,2);
+        obj.currentHex = _selected.material.color.getHex();
+        obj.material.color = new THREE.Color(_theme.selected);
+        obj.scale = new THREE.Vector3(2,2,2);
     }
 
     function onSelectObject(event) {
@@ -306,11 +306,12 @@ IndoorMap3d = function(mapdiv){
                 for(var i=0; i<intersects.length; i++) {
                     _selected = intersects[ i ].object;
                     if(_selected.type && _selected.type == "solidroom") {
-                        select(_selected);
-                        if(_selectionListener) {
-                            _selectionListener(_selected.id); //notify the listener
-                        }
-                        break;
+                        // select(_selected);
+                        // if(_selectionListener) {
+                        //     _selectionListener(_selected.id); //notify the listener
+                        // }
+                        // break;
+                        _selected = null;
                     }else{
                         _selected = null;
                     }
