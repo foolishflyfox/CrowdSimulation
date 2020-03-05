@@ -30,6 +30,7 @@ def parseRoomWall(wall):
         wall_id += 1
         wall_obj['thickness'] = cur_thickness
         wall_obj['Open'] = False
+        wall_obj['type'] = "roomwall"
         p1 = vertexs[i-1]
         p2 = vertexs[i]
         normal_unit_v = UnitNormalVector(p1, p2)
@@ -62,6 +63,7 @@ def parseObstacle(obstacle):
     for vertex in obstacle.getElementsByTagName('vertex'):
         points.append(float(vertex.getAttribute('px')))
         points.append(float(vertex.getAttribute('py')))
+    json_obstacle['type'] = "obstacle"
     json_obstacle['Outline'] = [[points]]
     return json_obstacle
 
@@ -109,6 +111,7 @@ def parseOutwall(outwall):
                 wall_id += 1
                 wall_obj['thickness'] = cur_thickness
                 wall_obj['Open'] = False
+                wall_obj['type'] = 'outwall'
                 p1 = vertexs[i-1]
                 p2 = vertexs[i]
                 normal_unit_v = UnitNormalVector(p1, p2)
@@ -141,8 +144,10 @@ def parseGoals(goals):
         goal_funcarea = {}
         if goal.getAttribute('id'):
             goal_funcarea['_id'] = int(goal.getAttribute('id'))
-        if goal.getAttribute('final')=="false": goal_funcarea['Category'] = 2
-        else: goal_funcarea['Category'] = 1
+        if goal.getAttribute('final')=="false":
+            goal_funcarea['type'] = 'mid_goal'
+        else: 
+            goal_funcarea['type'] = 'final_goal'
         goal_funcarea['Open'] = False
         goal_funcarea['Outline'] = [[]]
         points = []
@@ -228,13 +233,6 @@ def CreateMapJsonFile(inipath, outpath):
 
     FuncAreas += parseOutwall(floor.getElementsByTagName('outwall')[0])
 
-    # 获取 <routing> 中的 <goal> 信息
-    # simdir = os.path.dirname(geoxml_path)
-    # if jupedsim is None:
-    #     inipath = f"{simdir}/ini.xml"
-    #     jupedsim = xml.dom.minidom.parse(inipath).documentElement
-    # routings = jupedsim.getElementsByTagName('routing')
-    # for routing in routings:
     goalses = floor.getElementsByTagName('goals')
     for goals in goalses:
         json_goals = parseGoals(goals)

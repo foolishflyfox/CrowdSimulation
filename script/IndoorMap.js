@@ -486,7 +486,8 @@ function ParseModel(json, is3d, theme){
                 var funcArea = floor.FuncAreas[j];
                 funcArea.rect = IDM.GeomUtil.getBoundingRect(funcArea.Outline[0][0]);
                 if(!is3d) {
-                    funcArea.fillColor = theme.room(parseInt(funcArea.Type), funcArea.Category).color;
+                    // funcArea.fillColor = theme.room(parseInt(funcArea.Type), funcArea.Category).color;
+                    funcArea.fillColor = theme.objectStyle(funcArea.type).color
                     funcArea.strokeColor = theme.strokeStyle.color;
                 }else {
                     points = parsePoints(funcArea.Outline[0][0]);
@@ -543,7 +544,8 @@ function ParseModel(json, is3d, theme){
                         extrudeSettings = {amount: floorHeight, bevelEnabled: true, bevelThickness: 8};
                         geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
                         // material = new THREE.MeshLambertMaterial(theme.room(parseInt(funcArea.Type), funcArea.Category));
-                        material = new THREE.MeshLambertMaterial(theme.obstacle(parseInt(funcArea.Type), funcArea.Category));
+                        // material = new THREE.MeshLambertMaterial(theme.obstacle(parseInt(funcArea.Type), funcArea.Category));
+                        material = new THREE.MeshLambertMaterial(theme.objectStyle(funcArea.type));
                         mesh = new THREE.Mesh(geometry, material);
                         mesh.type = "solidroom";
                         mesh.id = funcArea._id;
