@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<CrowdSimulation>
+    <scene>
+        <!-- 墙壁属性 -->
+        <floorwall thickness="1" />
+        <roomwall thickness="0.5" />
+    </scene>
+    <geometry>
+        <floor>
+            <outwall>
+                <wall>
+                    <vertex px="-50" py="0"/>
+                </wall>
+                <transition>
+                    <vertex px="50" py="10"/>
+                </transition>
+            </outwall>
+            
+            <room>
+                <wall thickness="0.7">
+                    <vertex px="20" py="10"/>
+                </wall>
+                <crossing>
+                    <vertex px="30" py="10"/>
+                </crossing>
+            </room>
+            <obstacle>
+                <vertex px="15" py="15"/>
+            </obstacle>
+
+            <goals>
+                <goal>
+                    <vertex px="50" py="10"/>
+                </goal>
+            </goals>
+        </floor>
+    </geometry>
+
+</CrowdSimulation>
+
+
+

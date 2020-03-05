@@ -103,4 +103,6 @@
 - `<wall>`、`<transition>`、`<crossing>`、`<obstacle>`、`<goal>` 中只允许存在 `<vertex>`
 - **地图的有效性需要用户保证，程序不进行地图错误检测**
 
+*simulations/ini.xml* 是一个模板，用户可以在其之上进行修改。
+
 
