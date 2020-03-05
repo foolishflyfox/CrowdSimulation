@@ -11,15 +11,19 @@
 
 - 启动 web 服务：`python app`，将会在本机的 8080 端口提供web服务
 - 地图选择界面：在浏览器中输入`IP地址:8080`，如`localhost:8080`，即可进入地图选择界面
+
 ![project select](readme_imgs/project_select.png)
+
 其中仿真工程名从 *simulations* 目录中读取子文件夹，每个子文件夹代表一个仿真项目，包含仿真所需的所有信息，如地图信息、人群初始化信息，模型参数等。可以通过单选按钮选择显示类型，点击开始仿真即可载入地图。
 
 ## 地图效果
 
 2D 地图的效果如下：
+
 ![demo1 2d map](readme_imgs/demo1-2Dmap.png)
 
 3D 地图的显示效果为：
+
 ![demo1 3d map](readme_imgs/demo1-3Dmap.png)
 
 说明：
