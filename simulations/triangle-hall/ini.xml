@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<CrowdSimulation>
+    <scene>
+        <floorwall thickness="1" />
+        <roomwall thickness="0.5" />
+    </scene>
+    <geometry>
+        <floor>
+            <outwall>
+                <wall>
+                    <vertex px="25" py="3"/>
+                    <vertex px="-25" py="25"/>
+                    <vertex px="-25" py="-25"/>
+                    <vertex px="25" py="-3"/>
+                </wall>
+                <transition>
+                    <vertex px="25" py="-3"/>
+                    <vertex px="25" py="3"/>
+                </transition>
+            </outwall>
+
+            <goals>
+                <goal>
+                    <vertex px="25" py="2"/>
+                    <vertex px="25" py="-2"/>
+                    <vertex px="30" py="-2"/>
+                    <vertex px="30" py="2"/>
+                </goal>
+            </goals>
+        </floor>
+    </geometry>
+
+</CrowdSimulation>
+
+
+
