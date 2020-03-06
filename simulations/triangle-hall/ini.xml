@@ -20,6 +20,13 @@
                 </transition>
             </outwall>
 
+            <obstacle>
+                <vertex px="10" py="0"/>
+                <vertex px="0" py="10"/>
+                <vertex px="-10" py="0"/>
+                <vertex px="0" py="-10"/>
+            </obstacle>
+
             <goals>
                 <goal>
                     <vertex px="25" py="2"/>
