@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request
 import os
-from xml2json import map_xml2json
+from xml2json import Xml2JsonTranslator
 
 app = Flask(__name__, static_url_path='', static_folder='.')
+translator = Xml2JsonTranslator()
 
 @app.route('/')
 def index():
@@ -13,7 +14,7 @@ def index():
 
 @app.route('/simulation', methods=['GET'])
 def simulation():
-    return map_xml2json(request.args['simname'], request.args['showtype'])
+    return translator.map_xml2json(request.args['simname'], request.args['showtype'])
 
 app.run(host='0.0.0.0', port=8080, debug=True)
 

@@ -1,7 +1,7 @@
 import math
 import sys
  
-def coss_multi(v1, v2):
+def cross_multi(v1, v2):
     """
     计算两个向量的叉乘
     :param v1:
