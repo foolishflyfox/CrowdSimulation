@@ -4,7 +4,7 @@ import json
 import random
 from flask import render_template
 
-from utils import *
+from pysim.utils import *
 
 
 wall_id = 1
