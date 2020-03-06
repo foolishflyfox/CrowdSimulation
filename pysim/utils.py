@@ -15,6 +15,7 @@ def cross_multi(v1, v2):
 def GetLosseMaxRect(points):
     return GetMaxRect(points, 1)
 
+# points 为二元组组成的数组
 def GetMaxRect(points, margin=0):
     left = sys.maxsize
     bottom = sys.maxsize
@@ -28,16 +29,19 @@ def GetMaxRect(points, margin=0):
     return [left-margin, bottom-margin, right+margin, bottom-margin, 
         right+margin, top+margin, left-margin, top+margin]
 
-def MaxRectBound(outline, type): 
+def MaxRectBound(outline, typename=None): 
     result = 0
-    if(type=='left'):
+    if(typename=='left'):
         result = outline[0]
-    elif(type=='right'):
+    elif(typename=='right'):
         result = outline[2]
-    elif(type=='bottom'):
+    elif(typename=='bottom'):
         result = outline[1]
-    elif(type=='top'):
+    elif(typename=='top'):
         result = outline[5]
+    else:
+        # 按上下左右顺序返回
+        return (outline[5], outline[1], outline[0], outline[2])
     return result
 
 def UnitNormalVector(point1, point2):

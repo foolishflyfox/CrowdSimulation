@@ -16,8 +16,8 @@ IndoorMap2d = function(mapdiv){
 
     this.options = {
         showNames : true,
-        showPubPoints : true,
-        selectable : true,
+        showPubPoints : false,
+        selectable : false,
         movable: true
     }
     this.containerSize = [0, 0];
@@ -36,14 +36,13 @@ IndoorMap2d = function(mapdiv){
         _this.containerHalfSize[0] = _this.containerSize[0] / 2;
         _this.containerHalfSize[1] = _this.containerSize[1] / 2;
         _this.containerPos = IDM.DomUtil.getPos(_mapDiv);
+        _this.agentStateChanged = false
 
         _this.renderer = new Canvas2DRenderer(_this);
         var canvasDiv = _this.renderer.domElement;
         _controls = new Controller2D(_this.renderer);
         _mapDiv.appendChild(canvasDiv);
         _mapDiv.style.overflow = "hidden";
-
-
     }
 
     this.reset = function(){
@@ -77,14 +76,13 @@ IndoorMap2d = function(mapdiv){
         var loader = new IndoorMapLoader(false);
         loader.load(fileName, function(mall){
             _this.mall = mall;
-            
             _this.showFloor(_this.mall.getDefaultFloorId());
-            
+            // agents 的 key 为行人 ID，value 为坐标 (x,y)
+            // _this.mall['agents'] = {}
             if(callback) {
                 callback();
             }
-
-
+            _this.mall.getCurFloor()['agents'] = {};
         });
     }
 
@@ -289,12 +287,34 @@ IndoorMap2d = function(mapdiv){
     function animate () {
         requestAnimationFrame(animate);
         //_controls.update();
-        if(_controls.viewChanged) {
+        if(_controls.viewChanged || _this.agentStateChanged) {
             _this.renderer.render(_this.mall);
             _controls.viewChanged = false;
+            _this.agentStateChanged = false;
         }
+        
+    }
 
-
+    // 和行人运动相关的函数
+    // 添加或修改一个 agent
+    this.SetAgent = function(agent) {
+        let id = agent[0];
+        let x = agent[1];
+        let y = agent[2];
+        let _curFloor = _this.mall.getCurFloor();
+        if((_curFloor.agents[id] == undefined) || (_curFloor.agents[id][0]!=x)
+                || (_curFloor.agents[id][1]!=y)){
+            _curFloor.agents[id] = [x, y];
+            _this.agentStateChanged = true;
+        }
+    }
+    // 删除一个 agent
+    function RemoveAgent(agent_id) {
+        let _curFloor = _this.mall.getCurFloor();
+        if(_curFloor.agents[agent_id]){
+            delete _curFloor.agents[agent_id];
+            _this.agentStateChanged = true;
+        }
     }
 
     _this.init();
@@ -410,6 +430,7 @@ Canvas2DRenderer = function (map) {
         _this.clearBg();
         _this.render();
     }
+
 
     this.scale = function(scale){
         _scale *= scale;
@@ -578,6 +599,8 @@ Canvas2DRenderer = function (map) {
             }
             _ctx.stroke();
         }
+
+
 
         ////test for selection
         //_ctx.fillStyle="#FF0000";

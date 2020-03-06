@@ -5,12 +5,14 @@ import random
 from flask import render_template
 
 from pysim.utils import *
+from pysim.SceneManager import SceneManager
 
 class Xml2JsonTranslator:
-    def __init__(self):
+    def __init__(self, scene_manager):
         self.wall_id = 1
         self.floorwall_thickness = 0.8
         self.roomwall_thickness = 0.4
+        self.scene_manager = scene_manager
     
     # wall 是一个 xml.dom.minidom.Element 类型
     def parseRoomWall(self, wall):
@@ -70,6 +72,8 @@ class Xml2JsonTranslator:
         funcareas = []
         cur_thickness = self.floorwall_thickness
         xml_obj = outwall.firstChild
+        floor_outline = [(float('inf'), float('inf'))]
+        wall_obstacles = []
         while xml_obj:
             if xml_obj.nodeName == 'wall':
                 wall = xml_obj
@@ -82,6 +86,8 @@ class Xml2JsonTranslator:
                     px = float(tv.getAttribute('px'))
                     py = float(tv.getAttribute('py'))
                     vertexs.append((px, py))
+                    if (px, py) != floor_outline[-1]:
+                        floor_outline.append((px, py))
                 for i in range(1, len(vertexs)):
                     wall_obj = {'id': self.wall_id}
                     self.wall_id += 1
@@ -98,6 +104,10 @@ class Xml2JsonTranslator:
                         p2[0]-dv[0], p2[1]-dv[1],
                         p1[0]-dv[0], p1[1]-dv[1]
                     ]
+                    wall_obstacles.append((p1[0]+dv[0], p1[1]+dv[1]))
+                    wall_obstacles.append((p2[0]+dv[0], p2[1]+dv[1]))
+                    wall_obstacles.append((p1[0]-dv[0], p1[1]-dv[1]))
+                    wall_obstacles.append((p2[0]-dv[0], p2[1]-dv[1]))
                     wall_obj['Outline'] = [[points]]
                     funcareas.append(wall_obj)
             elif xml_obj.nodeName == 'transition':
@@ -109,8 +119,13 @@ class Xml2JsonTranslator:
                     py = float(tv.getAttribute('py'))
                     json_transition['Outline'][0][0].append(px)
                     json_transition['Outline'][0][0].append(py)
+                    if (px, py) != floor_outline[-1]:
+                        floor_outline.append((px, py))
                 funcareas.append(json_transition)
             xml_obj = xml_obj.nextSibling
+        del floor_outline[0]
+        self.scene_manager.SetFloorOutline(floor_outline)
+        self.scene_manager.AddObstacleOutlines(wall_obstacles)
         return funcareas
 
     def parseGoals(self, goals):
@@ -184,6 +199,14 @@ class Xml2JsonTranslator:
                 roomwall = scene.getElementsByTagName('roomwall')[0]
                 s = roomwall.getAttribute('thickness')
                 if s!='': self.roomwall_thickness = float(s)
+
+        if len(sim.getElementsByTagName('parameters')):
+            parameter = sim.getElementsByTagName('parameters')[0]
+            if len(parameter.getElementsByTagName('gridsize')):
+                gridsize = parameter.getElementsByTagName('gridsize')
+                s_size = gridsize.getAttribute('value')
+                if s_size:
+                    self.scene_manager.SetGridSize(float(s_size))
         
         floor = geometry.getElementsByTagName('floor')[0]
 
@@ -258,8 +281,8 @@ class Xml2JsonTranslator:
         # geometry = sim.getElementsByTagName('geometry')
         # floor = geometry.getElementsByTagName('floor')[0]
         
-        if(not os.path.isfile(outpath)):
-            self.CreateMapJsonFile(inipath, outpath)
+        # if(not os.path.isfile(outpath)):
+        self.CreateMapJsonFile(inipath, outpath)
         return render_template('./simulate.html', datafile=outpath, showtype=showtype)
     
     
