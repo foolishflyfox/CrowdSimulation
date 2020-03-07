@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request
 import os
 import _thread
+from flask_socketio import SocketIO, emit
+
 from xml2json import Xml2JsonTranslator
 from pysim.SceneManager import SceneManager
 
@@ -22,9 +24,34 @@ def simulation():
     _thread.start_new_thread(scene_manager.SceneInit, tuple())
     return sim_page
 
-app.run(host='0.0.0.0', port=8080, debug=True)
+# app.run(host='0.0.0.0', port=8080, debug=True)
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
+
+# 前端 js 调用 io.connect 后发送, io.connect 返回值为websocket对象
+# 连接时间处理函数可以返回 False 以拒绝连接
+@socketio.on('connect')
+def client_connect():
+    print('client connect')
+
+@socketio.on('disconnect')
+def client_disconnect():
+    print('client disconnect')
+
+# 对应前端 socket.send('xxxx')
+@socketio.on('message')
+def handle_message(message):
+    print('received message: ' + message)
+
+# 对应前端 socket.emit('my event', json_obj)
+@socketio.on('sim_event')
+def handle_my_custom_event(event):
+    print('client event: ' + str(event))
+    if(event['name']=='load_agents'):
+        web_agents= scene_manager.GetAgents()
+        print(web_agents)
+        emit('load_agents', web_agents)
 
 
-
-
+socketio.run(app, host='0.0.0.0', port=8080, debug=True)
 

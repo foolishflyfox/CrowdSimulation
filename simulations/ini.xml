@@ -43,7 +43,7 @@
         <!-- 优先级从上到下依次递减 -->
         <!-- 指定具体位置 -->
         <custom>
-            <<vertex px="0" py="0"/>>
+            <vertex px="0" py="0"/>
         </custom>
         <!-- 自动生成 -->
         <!-- 指定房间的特定区域进行填充，不指定count表示最密集状态 -->
@@ -52,7 +52,7 @@
         <auto typename="room" roomid="1" count="5" xmin="-10" ymin="-10" xmax="10" ymax="10"/>
         <!-- 如果类型为 floor，整个楼进行填充，不指定count表示最密集状态 -->
         <auto typename="floor" count="50"/>
-    <agents>
+    </agents>
 </CrowdSimulation>
 
 

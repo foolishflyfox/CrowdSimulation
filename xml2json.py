@@ -68,6 +68,7 @@ class Xml2JsonTranslator:
         json_obstacle['Outline'] = [[points]]
         return json_obstacle
 
+    # tag: 解析 xml 中的 outwall
     def parseOutwall(self, outwall):
         funcareas = []
         cur_thickness = self.floorwall_thickness
@@ -181,6 +182,22 @@ class Xml2JsonTranslator:
         building = {"Outline":[[[]]]}
         return building
 
+    # tag: 解析 xml 中的 agents
+    def parseAgents(self, agents):
+        agents_config = {
+            'custom': [],
+            'room': [],
+            'floor': []
+        }
+        # 解析手动设置的agent
+        customs = agents.getElementsByTagName('custom')
+        for custom in customs:
+            for vertex in custom.getElementsByTagName('vertex'):
+                px = float(vertex.getAttribute('px'))
+                py = float(vertex.getAttribute('py'))
+                agents_config['custom'].append((px, py))
+        return agents_config
+
     def CreateMapJsonFile(self, inipath, outpath):
         result = {'data':{'Floors':[]}}
         Floors = result['data']['Floors']
@@ -203,7 +220,7 @@ class Xml2JsonTranslator:
         if len(sim.getElementsByTagName('parameters')):
             parameter = sim.getElementsByTagName('parameters')[0]
             if len(parameter.getElementsByTagName('gridsize')):
-                gridsize = parameter.getElementsByTagName('gridsize')
+                gridsize = parameter.getElementsByTagName('gridsize')[0]
                 s_size = gridsize.getAttribute('value')
                 if s_size:
                     self.scene_manager.SetGridSize(float(s_size))
@@ -254,6 +271,7 @@ class Xml2JsonTranslator:
                 outline[j] = (outline[j]-xcenter)*scale
                 outline[j+1] = (outline[j+1]-ycenter)*scale
                 j += 2
+        self.scene_manager.SetSceneDeformation(xcenter, ycenter, scale)
         # 扩大Floor的边界
         outline = self.GetFloorOutline(Floor['FuncAreas'])
         margin_rate = 1.0/20
@@ -269,6 +287,10 @@ class Xml2JsonTranslator:
         # print(json.dumps(result, indent=2))
         with open(outpath, 'w') as output:
             json.dump(result, output, indent=2)
+
+        if len(sim.getElementsByTagName('agents')):
+            agents = sim.getElementsByTagName('agents')[0]
+            self.scene_manager.SetAgentsConfig(self.parseAgents(agents))
     
 
     def map_xml2json(self, simname, showtype=True):

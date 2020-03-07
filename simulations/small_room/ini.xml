@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<CrowdSimulation>
+    <scene>
+        <!-- 墙壁属性 -->
+        <floorwall thickness="0.3" />
+        <roomwall thickness="0.2" />
+    </scene>
+    <geometry>
+        <floor>
+            <outwall>
+                <wall>
+                    <vertex px="1" py="1"/>
+                    <vertex px="-1" py="1"/>
+                    <vertex px="-1" py="-1"/>
+                    <vertex px="1" py="-1"/>
+                </wall>
+                <transition>
+                    <vertex px="1" py="1"/>
+                </transition>
+            </outwall>
+            
+        </floor>
+    </geometry>
+    <parameters>
+        <gridsize value="0.3"/>
+    </parameters>
+    <agents>
+        <!-- 优先级从上到下依次递减 -->
+        <!-- 指定具体位置 -->
+        <custom>
+            <vertex px="0" py="0"/>
+        </custom>
+    </agents>
+</CrowdSimulation>
+
+
+

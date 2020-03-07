@@ -5,6 +5,7 @@
 - python3
     - Flask
     - matplotlib
+    - flask-socketio
 
 
 ## 启动web服务

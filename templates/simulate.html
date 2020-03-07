@@ -12,6 +12,7 @@
 <script src="js/OrbitControls.js"></script>
 <script src="js/Projector.js"></script>
 <script src="js/stats.min.js"></script>
+<script src="js/socket.io.min.js"></script>
 
 <!-- customic lib -->
 <script src="script/IndoorMap.js"></script>
@@ -31,12 +32,20 @@
     }
     var map = IndoorMap(params);
     var file_json;
+    var websocket = null;
     // file_json = 'data/北京-7-侨福芳草地购物中心.json';
     // file_json = 'data/mydata.json';
     file_json = "{{ datafile }}";
     // file_json = "./simulations/T-junction/geo.json";
     map.load(file_json, function(){
         //map.setTheme(testTheme);
+        websocket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+        websocket.on('connect', function(){
+            console.log('connect to server successfully')
+        });
+        websocket.on('load_agents', function(web_agents){
+            map.SetAgents(web_agents)
+        });
         map.showAreaNames(true).setSelectable(true);
         var ul = IndoorMap.getUI(map);
         document.body.appendChild(ul);
@@ -46,12 +55,13 @@
 </script>
 <!-- buttons just for test-->
 <div class="testButton">
-<ul >
-    <li onclick="map.zoomIn(0.8)">+</li>
-    <li onclick="map.zoomOut(0.8)">-</li>
+<ul>
+    <li onclick="map.zoomIn(0.8)" style="cursor: zoom-in;">+</li>
+    <li onclick="map.zoomOut(0.8)" style="cursor: zoom-out;">-</li>
     <!--<li onclick="map.setTopView()">Top View</li>-->
-    <li onclick="map.setDefaultView()">Default View</li>
-
+    <li onclick="map.setDefaultView()" style="cursor: pointer;">Default View</li>
+    <li onclick="map.simulationControl(this)" style="cursor: pointer;font-weight:bold;">Load Agents</li>
+    <li id="duration">00:00:00</li>
 </ul>
 </div>
 </body>

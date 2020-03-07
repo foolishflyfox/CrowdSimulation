@@ -69,7 +69,7 @@ IndoorMap2d = function(mapdiv){
         return _this.mall;
     }
 
-    //load the map by the json file name
+    // tag: 载入 building json
     this.load = function (fileName, callback) {
         _this.reset();
         _theme = default2dTheme;
@@ -82,7 +82,6 @@ IndoorMap2d = function(mapdiv){
             if(callback) {
                 callback();
             }
-            _this.mall.getCurFloor()['agents'] = {};
         });
     }
 
@@ -284,6 +283,7 @@ IndoorMap2d = function(mapdiv){
         _this.renderer.render(_this.mall);
     }
 
+    // tag: 动画函数，调用重绘函数
     function animate () {
         requestAnimationFrame(animate);
         //_controls.update();
@@ -296,24 +296,35 @@ IndoorMap2d = function(mapdiv){
     }
 
     // 和行人运动相关的函数
-    // 添加或修改一个 agent
-    this.SetAgent = function(agent) {
-        let id = agent[0];
-        let x = agent[1];
-        let y = agent[2];
+    // tag: 更新agent位置
+    this.SetAgents = function(agents) {
         let _curFloor = _this.mall.getCurFloor();
-        if((_curFloor.agents[id] == undefined) || (_curFloor.agents[id][0]!=x)
-                || (_curFloor.agents[id][1]!=y)){
-            _curFloor.agents[id] = [x, y];
-            _this.agentStateChanged = true;
+        if(_curFloor==null){
+            alert('请选择具体楼层');
+            return;
         }
+        _curFloor['agents']= agents;
+        _this.agentStateChanged = true;
     }
+
     // 删除一个 agent
     function RemoveAgent(agent_id) {
         let _curFloor = _this.mall.getCurFloor();
         if(_curFloor.agents[agent_id]){
             delete _curFloor.agents[agent_id];
             _this.agentStateChanged = true;
+        }
+    }
+
+    this.simulationControl = function(control_btn){
+        if(control_btn.innerText=="Load Agents"){
+            this.dom_duration = document.getElementById('duration');
+            control_btn.innerText = "Start";
+            websocket.emit('sim_event', {'name':'load_agents'});
+        }else if(control_btn.innerText=="Start"){
+            control_btn.innerText = "Pause";
+        }else if(control_btn.innerText=="Pause"){
+            control_btn.innerText = "Start";
         }
     }
 
@@ -432,6 +443,7 @@ Canvas2DRenderer = function (map) {
     }
 
 
+    // tag: 控制 2d scene 缩放的函数
     this.scale = function(scale){
         _scale *= scale;
         _curFloor = _map.mall.getCurFloor();
@@ -545,7 +557,7 @@ Canvas2DRenderer = function (map) {
         tmpCtx.drawImage(_canvas,_canvasPos[0],_canvasPos[1]);
         return tmpCanvas.toDataURL(type);
     }
-
+    // tag: 2d 场景重绘代码
     this.render = function (){
         if(_map.mall === undefined) {
             return;
@@ -598,6 +610,26 @@ Canvas2DRenderer = function (map) {
                 _ctx.fill();
             }
             _ctx.stroke();
+        }
+
+        let agents = _curFloor['agents']
+        if(agents && agents['radius']){
+            let r = agents['radius']
+            let nr = r * _scale;
+            console.log("nr = ", nr)
+            _ctx.fillStyle = "#FF0000";
+            for(let j=0; j < agents['values'].length; ++j){
+                let x = agents['values'][j][1];
+                let y = agents['values'][j][1];
+                let nx = ((x - _this.mapCenter[0])*_scale)>>0;
+                let ny = ((y - _this.mapCenter[1])*_scale)>>0;
+                _ctx.beginPath();
+                // _ctx.arc(x, y, r, 0, 2*Math.PI);
+                _ctx.arc(nx, ny, nr, 0, 2*Math.PI, true);
+                _ctx.closePath();
+                _ctx.fill();
+                // _ctx.stroke();
+            }
         }
 
 

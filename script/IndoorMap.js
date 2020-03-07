@@ -229,6 +229,7 @@ function Mall(){
     this.is3d = true;
     this.jsonData = null; //original json data
 
+
     var _curFloorId;
 
     //get building id
@@ -319,11 +320,6 @@ function Mall(){
         var offset = 4;
         for(var i=0; i<_this.floors.length; i++){
             _this.floors[i].position.set(0,0,i*_this.floors[i].height*offset);
-//            if(i == 4){
-//                _this.floors[i].position.set(0,-300,i*_this.floors[i].height*offset);
-//            }else{
-//
-//            }
             _this.root.add(this.floors[i]);
         }
         if(this.building && this.building.scale){
@@ -427,6 +423,7 @@ IndoorMapLoader.prototype.parse = function ( json ) {
 };
 
 //-----------------------------the Parser class ---------------------------------------
+// tag: 将 server 传送来的 json 对象解析为 Mall 对象
 function ParseModel(json, is3d, theme){
 
     var mall = new Mall();

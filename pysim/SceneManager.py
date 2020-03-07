@@ -28,6 +28,18 @@ class SceneManager:
         self.init_lock = Lock()
         self.gridsize = 0.3
         self.grids = []
+        # scene 的移动和缩放参数
+        self.xcenter = 0.0
+        self.ycenter = 0.0
+        self.scale = 1.0
+        # 存放 agents 的解析结果
+        self.agents_config = None
+        # 存放所有的 agent
+        self.agents = []
+    def SetSceneDeformation(self, xcenter, ycenter, scale):
+        self.xcenter = xcenter
+        self.ycenter = ycenter
+        self.scale = scale
     def SetFloorOutline(self, floor_outline):
         self.floor_outline = floor_outline
     def AddObstacleOutlines(self, obstacle_outlines):
@@ -52,11 +64,40 @@ class SceneManager:
                 self.grids.append(Grid(px, py))
                 px += self.gridsize
             py -= self.gridsize
+    def InitAgents(self):
+        custom_poses = self.agents_config['custom']
+        agent_id = 1
+        self.agents.clear()
+        for pos in custom_poses:
+            self.agents.append({
+                'id': agent_id,
+                'x': pos[0],
+                'y': pos[1]
+            })
+            agent_id += 1
+    def GetAgents(self):
+        # 确保初始化操作已经完成
+        self.init_lock.acquire()
+        self.init_lock.release()
+        web_agents = {
+            # 行人为半径为 0.25m 的圆或球
+            'radius': 0.25*self.scale,
+            'values': []
+        }
+        for agent in self.agents:
+            web_agents['values'].append((agent['id'], 
+                (agent['x']-self.xcenter)*self.scale,
+                (agent['y']-self.ycenter)*self.scale))
+        return web_agents
 
     def SceneInit(self):
         self.init_lock.acquire()
         self.GridScene()
+        self.InitAgents()
         self.init_lock.release()
+
+    def SetAgentsConfig(self, agents_config):
+        self.agents_config = agents_config
 
     def Route(self):
         # 使用迪杰斯特拉的变种，多目标+堆
