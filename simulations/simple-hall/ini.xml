@@ -5,6 +5,8 @@
         <!-- 墙壁属性 -->
         <floorwall thickness="0.3" />
         <roomwall thickness="0.2" />
+
+        <camera x="119.8" y="384.0" z="300.3"/>
     </scene>
     <geometry>
         <floor>

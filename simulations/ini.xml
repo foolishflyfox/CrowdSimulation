@@ -5,6 +5,10 @@
         <!-- 墙壁属性 -->
         <floorwall thickness="1" />
         <roomwall thickness="0.5" />
+
+        <gridsize value="0.3"/>
+        <!-- 设置相机位置，调整合适角度后通过浏览器终端的 map.getCameraPos() 获取 -->
+        <!-- <camera x="0" y="0" z="-30"/> -->
     </scene>
     <geometry>
         <floor>
@@ -36,9 +40,6 @@
             </goals>
         </floor>
     </geometry>
-    <parameters>
-        <gridsize value="0.3"/>
-    </parameters>
     <agents>
         <!-- 优先级从上到下依次递减 -->
         <!-- 指定具体位置 -->

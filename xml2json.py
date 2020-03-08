@@ -177,9 +177,20 @@ class Xml2JsonTranslator:
         Floor['Outline'] = [[self.GetFloorOutline(Floor['FuncAreas'])]]
         return Floor
 
-    # 构建 Building 对象
-    def CreateBuilding(self, Floors):
-        building = {"Outline":[[[]]]}
+    # tag: 构建 Building 对象
+    def CreateBuilding(self, xml_scene):
+        building = {
+            "Outline":[[[]]],
+            "DefaultFloor": 1
+        }
+        if xml_scene:
+            xml_cameras = xml_scene.getElementsByTagName('camera')
+            if len(xml_cameras):
+                xml_camera = xml_cameras[0]
+                px = float(xml_camera.getAttribute('x'))
+                py = float(xml_camera.getAttribute('y'))
+                pz = float(xml_camera.getAttribute('z'))
+                building['CameraPos'] = [px, py, pz]
         return building
 
     # tag: 解析 xml 中的 agents
@@ -198,6 +209,7 @@ class Xml2JsonTranslator:
                 agents_config['custom'].append((px, py))
         return agents_config
 
+    # tag: 解析 ini.xml 文件，生成 geo.json 文件
     def CreateMapJsonFile(self, inipath, outpath):
         result = {'data':{'Floors':[]}}
         Floors = result['data']['Floors']
@@ -206,16 +218,17 @@ class Xml2JsonTranslator:
         sim = dom.documentElement
         geometry = sim.getElementsByTagName('geometry')[0]
         
+        xml_scene = None
         if len(sim.getElementsByTagName('scene')):
-            scene = sim.getElementsByTagName('scene')[0]
-            if len(scene.getElementsByTagName('floorwall')):
-                floorwall = scene.getElementsByTagName('floorwall')[0]
-                s = floorwall.getAttribute('thickness')
-                if s!='': self.floorwall_thickness = float(s)
-            if len(scene.getElementsByTagName('roomwall')):
-                roomwall = scene.getElementsByTagName('roomwall')[0]
-                s = roomwall.getAttribute('thickness')
-                if s!='': self.roomwall_thickness = float(s)
+            xml_scene = sim.getElementsByTagName('scene')[0]
+        if xml_scene and len(xml_scene.getElementsByTagName('floorwall')):
+            floorwall = xml_scene.getElementsByTagName('floorwall')[0]
+            s = floorwall.getAttribute('thickness')
+            if s!='': self.floorwall_thickness = float(s)
+        if xml_scene and len(xml_scene.getElementsByTagName('roomwall')):
+            roomwall = xml_scene.getElementsByTagName('roomwall')[0]
+            s = roomwall.getAttribute('thickness')
+            if s!='': self.roomwall_thickness = float(s)
 
         if len(sim.getElementsByTagName('parameters')):
             parameter = sim.getElementsByTagName('parameters')[0]
@@ -283,7 +296,8 @@ class Xml2JsonTranslator:
         Floor['High'] = min(xlen, ylen)*scale/50
 
         Floors.append(Floor)
-        result['data']['building'] = self.CreateBuilding(Floors)
+
+        result['data']['building'] = self.CreateBuilding(xml_scene)
         # print(json.dumps(result, indent=2))
         with open(outpath, 'w') as output:
             json.dump(result, output, indent=2)
