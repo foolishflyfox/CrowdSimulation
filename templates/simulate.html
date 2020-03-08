@@ -36,7 +36,6 @@
     file_json = "{{ datafile }}";
     // file_json = "./simulations/T-junction/geo.json";
     map.load(file_json, function(){
-        //map.setTheme(testTheme);
         websocket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
         websocket.on('connect', function(){
             console.log('connect to server successfully')

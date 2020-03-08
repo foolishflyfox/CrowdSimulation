@@ -623,7 +623,7 @@ Canvas2DRenderer = function (map) {
                 let nx = ((x - _this.mapCenter[0])*_scale)>>0;
                 let ny = ((y - _this.mapCenter[1])*_scale)>>0;
                 _ctx.beginPath();
-                _ctx.arc(nx, ny, nr, 0, 2*Math.PI);
+                _ctx.arc(nx, -ny, nr, 0, 2*Math.PI);
                 _ctx.closePath();
                 _ctx.fill();
                 // _ctx.stroke();

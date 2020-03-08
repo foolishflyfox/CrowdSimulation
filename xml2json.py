@@ -308,6 +308,7 @@ class Xml2JsonTranslator:
     
 
     def map_xml2json(self, simname, showtype=True):
+        self.wall_id = 1
         simdir = f"./simulations/{simname}"
         inipath = f"{simdir}/ini.xml"
         outpath = simdir+'/geo.json'

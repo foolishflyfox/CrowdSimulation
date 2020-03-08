@@ -20,10 +20,17 @@ IndoorMap3d = function(mapdiv){
     var _sceneOrtho, _cameraOrtho;//for 2d
     var _spriteMaterials = [], _pubPointSprites=null, _nameSprites = null;
 
+
     this.camera = null;
     this.renderer = null;
     this.mall = null;
     this.is3d = true;
+
+    // key 为 agent_id, value 为 THREE.SphereGeometry 对象
+    this.agents = {};
+    this.agent_radius = 1.0;
+
+    this.agentStateChanged = false;
 
     this.init = function(){
 
@@ -340,19 +347,22 @@ IndoorMap3d = function(mapdiv){
         _controls.viewChanged = true;
     }
 
+    // tag: 动画函数
     function animate () {
         requestAnimationFrame(animate);
         _controls.update();
-        if(_controls.viewChanged) {
+        if(_controls.viewChanged || _this.agentStateChanged) {
 
             _this.renderer.clear();
             _this.renderer.render(_scene, _this.camera);
+            _this.agentStateChanged = false;
 
-            if (_showNames || _showPubPoints) {
-                updateLabels();
-            }
-            _this.renderer.clearDepth();
-            _this.renderer.render(_sceneOrtho, _cameraOrtho);
+            // indoor3D code: 用于显示商户名与标志
+            // if (_showNames || _showPubPoints) {
+            //     updateLabels();
+            // }
+            // _this.renderer.clearDepth();
+            // _this.renderer.render(_sceneOrtho, _cameraOrtho);
 
         }
 
@@ -595,6 +605,50 @@ IndoorMap3d = function(mapdiv){
 
         _this.renderer.setSize( width, height );
         _controls.viewChanged = true;
+    }
+
+    // 和行人运动相关的函数
+    // tag: 3D 更新agent位置
+    this.SetAgents = function(agents) {
+        let _curFloor = _this.mall.getCurFloor();
+        if(_curFloor==null){
+            alert('请选择具体楼层');
+            return;
+        }
+        _curFloor['agents']= agents;
+        _this.agent_radius = agents['radius']
+        let sphereMat = new THREE.MeshBasicMaterial({
+            color: 0xFF0000, wireframe: false
+        });
+        for(let i=0; i<agents['values'].length; ++i){
+            agent = agents['values'][i]
+            let id = agent[0];
+            let px = agent[1];
+            let py = agent[2];
+            if(_this.agents.hasOwnProperty(id)){
+                _this.agents[id].position.set(px, py, 0);
+            }else{
+                // 参数: radius widthSegments HeightSegments
+                let sphereGeo = new THREE.SphereGeometry(_this.agent_radius, 40, 40);
+                _this.agents[id] = new THREE.Mesh(sphereGeo, sphereMat);
+                _this.agents[id].position.set(px, py, _this.agent_radius);
+                _this.mall.floors[0].add(_this.agents[id]);
+            }
+        }
+        // console.log(agents);
+        _this.agentStateChanged = true;
+    }
+
+    this.simulationControl = function(control_btn){
+        if(control_btn.innerText=="Load Agents"){
+            this.dom_duration = document.getElementById('duration');
+            control_btn.innerText = "Start";
+            websocket.emit('sim_event', {'name':'load_agents'});
+        }else if(control_btn.innerText=="Start"){
+            control_btn.innerText = "Pause";
+        }else if(control_btn.innerText=="Pause"){
+            control_btn.innerText = "Start";
+        }
     }
 
     _this.init();
