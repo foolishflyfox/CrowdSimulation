@@ -3,46 +3,46 @@
 <CrowdSimulation>
     <scene>
         <!-- 墙壁属性 -->
-        <floorwall thickness="1" />
-        <roomwall thickness="0.5" />
+        <floorwall thickness="0.3" />
+        <roomwall thickness="0.2" />
     </scene>
     <geometry>
         <floor>
             <outwall>
                 <wall>
                     <vertex px="0" py="0"/>
-                    <vertex px="0" py="10"/>
-                    <vertex px="-100" py="10"/>
-                    <vertex px="-100" py="-90"/>
-                    <vertex px="0" py="-90"/>
-                    <vertex px="0" py="-80"/>
+                    <vertex px="0" py="2"/>
+                    <vertex px="-30" py="2"/>
+                    <vertex px="-30" py="-18"/>
+                    <vertex px="0" py="-18"/>
+                    <vertex px="0" py="-16"/>
                 </wall>
                 <transition>
-                    <vertex px="0" py="-80"/>
-                    <vertex px="0" py="-70"/>
+                    <vertex px="0" py="-16"/>
+                    <vertex px="0" py="-14"/>
                 </transition>
                 <wall>
-                    <vertex px="0" py="-70"/>
-                    <vertex px="0" py="-10"/>
+                    <vertex px="0" py="-14"/>
+                    <vertex px="0" py="-2"/>
                 </wall>
                 <transition>
-                    <vertex px="0" py="-10"/>
+                    <vertex px="0" py="-2"/>
                     <vertex px="0" py="0"/>
                 </transition>
             </outwall>
 
             <goals>
                 <goal>
-                    <vertex px="0" py="-8"/>
-                    <vertex px="0" py="-2"/>
-                    <vertex px="5" py="-2"/>
-                    <vertex px="5" py="-8"/>
+                    <vertex px="0" py="-1.6"/>
+                    <vertex px="0" py="-0.4"/>
+                    <vertex px="1" py="-0.4"/>
+                    <vertex px="1" py="-1.6"/>
                 </goal>
                 <goal>
-                    <vertex px="0" py="-72"/>
-                    <vertex px="0" py="-78"/>
-                    <vertex px="5" py="-78"/>
-                    <vertex px="5" py="-72"/>
+                    <vertex px="0" py="-14.4"/>
+                    <vertex px="0" py="-15.6"/>
+                    <vertex px="1" py="-15.6"/>
+                    <vertex px="1" py="-14.4"/>
                 </goal>
             </goals>
         </floor>
@@ -50,8 +50,9 @@
 
     <agents>
         <custom>
-            <vertex px="-10" py="-10"/>
-            <vertex px="-20" py="-20"/>
+            <vertex px="-11" py="-8"/>
+            <vertex px="-10" py="-8"/>
+            <vertex px="-10" py="-7"/>
         </custom>
         <!-- 自动生成 -->
         <!-- 指定房间的特定区域进行填充，不指定count表示最密集状态 -->

@@ -616,16 +616,14 @@ Canvas2DRenderer = function (map) {
         if(agents && agents['radius']){
             let r = agents['radius']
             let nr = r * _scale;
-            console.log("nr = ", nr)
             _ctx.fillStyle = "#FF0000";
             for(let j=0; j < agents['values'].length; ++j){
                 let x = agents['values'][j][1];
-                let y = agents['values'][j][1];
+                let y = agents['values'][j][2];
                 let nx = ((x - _this.mapCenter[0])*_scale)>>0;
                 let ny = ((y - _this.mapCenter[1])*_scale)>>0;
                 _ctx.beginPath();
-                // _ctx.arc(x, y, r, 0, 2*Math.PI);
-                _ctx.arc(nx, ny, nr, 0, 2*Math.PI, true);
+                _ctx.arc(nx, ny, nr, 0, 2*Math.PI);
                 _ctx.closePath();
                 _ctx.fill();
                 // _ctx.stroke();

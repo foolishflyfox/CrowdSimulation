@@ -49,7 +49,6 @@ def handle_my_custom_event(event):
     print('client event: ' + str(event))
     if(event['name']=='load_agents'):
         web_agents= scene_manager.GetAgents()
-        print(web_agents)
         emit('load_agents', web_agents)
 
 
