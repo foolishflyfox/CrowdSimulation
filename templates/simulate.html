@@ -33,8 +33,6 @@
     var map = IndoorMap(params);
     var file_json;
     var websocket = null;
-    // file_json = 'data/北京-7-侨福芳草地购物中心.json';
-    // file_json = 'data/mydata.json';
     file_json = "{{ datafile }}";
     // file_json = "./simulations/T-junction/geo.json";
     map.load(file_json, function(){
@@ -46,7 +44,7 @@
         websocket.on('load_agents', function(web_agents){
             map.SetAgents(web_agents)
         });
-        map.showAreaNames(true).setSelectable(true);
+        // map.showAreaNames(true).setSelectable(true);
         var ul = IndoorMap.getUI(map);
         document.body.appendChild(ul);
         // map.showFloor(0);

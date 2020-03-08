@@ -733,11 +733,12 @@ IndoorMap.getUI = function(indoorMap){
     _uiRoot.className = 'floorsUI';
 
     if(_indoorMap.is3d) {
+        // tag: 创建左侧边栏
         var li = document.createElement('li');
         var text = document.createTextNode('All');
 
         li.appendChild(text);
-        _uiRoot.appendChild(li);
+        // _uiRoot.appendChild(li);
         li.onclick = function () {
             _indoorMap.showAllFloors();
         }
