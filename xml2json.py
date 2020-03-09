@@ -13,6 +13,7 @@ class Xml2JsonTranslator:
         self.floorwall_thickness = 0.8
         self.roomwall_thickness = 0.4
         self.scene_manager = scene_manager
+        self.geo_scale = 1.0
     
     # wall 是一个 xml.dom.minidom.Element 类型
     def parseRoomWall(self, wall):
@@ -29,18 +30,18 @@ class Xml2JsonTranslator:
         for i in range(1, len(vertexs)):
             wall_obj = {'id': self.wall_id}
             self.wall_id += 1
-            wall_obj['thickness'] = cur_thickness
             wall_obj['Open'] = False
             wall_obj['type'] = "roomwall"
             p1 = vertexs[i-1]
             p2 = vertexs[i]
             normal_unit_v = UnitNormalVector(p1, p2)
             dv = tuple(v * cur_thickness / 2.0 for v in normal_unit_v)
+            
             points = [
-                p1[0]+dv[0], p1[1]+dv[1],
-                p2[0]+dv[0], p2[1]+dv[1],
-                p2[0]-dv[0], p2[1]-dv[1],
-                p1[0]-dv[0], p1[1]-dv[1]
+                (p1[0]+dv[0])*self.geo_scale, (p1[1]+dv[1])*self.geo_scale,
+                (p2[0]+dv[0])*self.geo_scale, (p2[1]+dv[1])*self.geo_scale,
+                (p2[0]-dv[0])*self.geo_scale, (p2[1]-dv[1])*self.geo_scale,
+                (p1[0]-dv[0])*self.geo_scale, (p1[1]-dv[1])*self.geo_scale
             ]
             wall_obj['Outline'] = [[points]]
             funcareas.append(wall_obj)
@@ -51,8 +52,8 @@ class Xml2JsonTranslator:
         json_crossing = {'Wall': 'crossing', 'Open': True}
         json_crossing['Outline'] = [[[]]]
         for tv in crossing.getElementsByTagName('vertex'):
-            px = float(tv.getAttribute('px'))
-            py = float(tv.getAttribute('py'))
+            px = float(tv.getAttribute('px'))*self.geo_scale
+            py = float(tv.getAttribute('py'))*self.geo_scale
             json_crossing['Outline'][0][0].append(px)
             json_crossing['Outline'][0][0].append(py)
         return json_crossing
@@ -62,8 +63,8 @@ class Xml2JsonTranslator:
         json_obstacle['Open'] = False
         points = []
         for vertex in obstacle.getElementsByTagName('vertex'):
-            points.append(float(vertex.getAttribute('px')))
-            points.append(float(vertex.getAttribute('py')))
+            points.append(float(vertex.getAttribute('px'))*self.geo_scale)
+            points.append(float(vertex.getAttribute('py'))*self.geo_scale)
         json_obstacle['type'] = "obstacle"
         json_obstacle['Outline'] = [[points]]
         return json_obstacle
@@ -88,11 +89,11 @@ class Xml2JsonTranslator:
                     py = float(tv.getAttribute('py'))
                     vertexs.append((px, py))
                     if (px, py) != floor_outline[-1]:
-                        floor_outline.append((px, py))
+                        floor_outline.append((px*self.geo_scale, py*self.geo_scale))
                 for i in range(1, len(vertexs)):
                     wall_obj = {'id': self.wall_id}
                     self.wall_id += 1
-                    wall_obj['thickness'] = cur_thickness
+                    # wall_obj['thickness'] = cur_thickness
                     wall_obj['Open'] = False
                     wall_obj['type'] = 'outwall'
                     p1 = vertexs[i-1]
@@ -100,15 +101,15 @@ class Xml2JsonTranslator:
                     normal_unit_v = UnitNormalVector(p1, p2)
                     dv = tuple(v * cur_thickness / 2.0 for v in normal_unit_v)
                     points = [
-                        p1[0]+dv[0], p1[1]+dv[1],
-                        p2[0]+dv[0], p2[1]+dv[1],
-                        p2[0]-dv[0], p2[1]-dv[1],
-                        p1[0]-dv[0], p1[1]-dv[1]
+                        (p1[0]+dv[0])*self.geo_scale, (p1[1]+dv[1])*self.geo_scale,
+                        (p2[0]+dv[0])*self.geo_scale, (p2[1]+dv[1])*self.geo_scale,
+                        (p2[0]-dv[0])*self.geo_scale, (p2[1]-dv[1])*self.geo_scale,
+                        (p1[0]-dv[0])*self.geo_scale, (p1[1]-dv[1])*self.geo_scale
                     ]
-                    wall_obstacles.append((p1[0]+dv[0], p1[1]+dv[1]))
-                    wall_obstacles.append((p2[0]+dv[0], p2[1]+dv[1]))
-                    wall_obstacles.append((p1[0]-dv[0], p1[1]-dv[1]))
-                    wall_obstacles.append((p2[0]-dv[0], p2[1]-dv[1]))
+                    wall_obstacles.append((points[0], points[1]))
+                    wall_obstacles.append((points[2], points[3]))
+                    wall_obstacles.append((points[6], points[7]))
+                    wall_obstacles.append((points[4], points[5]))
                     wall_obj['Outline'] = [[points]]
                     funcareas.append(wall_obj)
             elif xml_obj.nodeName == 'transition':
@@ -116,8 +117,8 @@ class Xml2JsonTranslator:
                 json_transition = {'Wall': 'transition', 'Open': True}
                 json_transition['Outline'] = [[[]]]
                 for tv in transition.getElementsByTagName('vertex'):
-                    px = float(tv.getAttribute('px'))
-                    py = float(tv.getAttribute('py'))
+                    px = float(tv.getAttribute('px'))*self.geo_scale
+                    py = float(tv.getAttribute('py'))*self.geo_scale
                     json_transition['Outline'][0][0].append(px)
                     json_transition['Outline'][0][0].append(py)
                     if (px, py) != floor_outline[-1]:
@@ -144,8 +145,8 @@ class Xml2JsonTranslator:
             goal_funcarea['Outline'] = [[]]
             points = []
             for vertex in goal.getElementsByTagName('vertex'):
-                points.append(float(vertex.getAttribute('px')))
-                points.append(float(vertex.getAttribute('py')))
+                points.append(float(vertex.getAttribute('px'))*self.geo_scale)
+                points.append(float(vertex.getAttribute('py'))*self.geo_scale)
             goal_funcarea['Outline'][0].append(points)
             json_goals.append(goal_funcarea)
         return json_goals
@@ -204,8 +205,8 @@ class Xml2JsonTranslator:
         customs = agents.getElementsByTagName('custom')
         for custom in customs:
             for vertex in custom.getElementsByTagName('vertex'):
-                px = float(vertex.getAttribute('px'))
-                py = float(vertex.getAttribute('py'))
+                px = float(vertex.getAttribute('px'))*self.geo_scale
+                py = float(vertex.getAttribute('py'))*self.geo_scale
                 agents_config['custom'].append((px, py))
         return agents_config
 
@@ -217,6 +218,8 @@ class Xml2JsonTranslator:
         dom = xml.dom.minidom.parse(inipath)
         sim = dom.documentElement
         geometry = sim.getElementsByTagName('geometry')[0]
+        if geometry.getAttribute('scale'):
+            self.geo_scale = float(geometry.getAttribute('scale'))
         
         xml_scene = None
         if len(sim.getElementsByTagName('scene')):
@@ -308,6 +311,7 @@ class Xml2JsonTranslator:
     
 
     def map_xml2json(self, simname, showtype=True):
+        self.scene_manager.initializeScene()
         self.wall_id = 1
         simdir = f"./simulations/{simname}"
         inipath = f"{simdir}/ini.xml"

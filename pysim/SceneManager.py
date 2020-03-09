@@ -23,6 +23,9 @@ class Grid:
 
 class SceneManager:
     def __init__(self):
+        self.initializeScene()
+
+    def initializeScene(self):
         self.floor_outline = None
         self.obstacle_outlines = []
         self.init_lock = Lock()
@@ -36,6 +39,7 @@ class SceneManager:
         self.agents_config = None
         # 存放所有的 agent
         self.agents = []
+        
     def SetSceneDeformation(self, xcenter, ycenter, scale):
         self.xcenter = xcenter
         self.ycenter = ycenter
@@ -65,6 +69,7 @@ class SceneManager:
                 px += self.gridsize
             py -= self.gridsize
     def InitAgents(self):
+        if not self.agents_config: return
         custom_poses = self.agents_config['custom']
         agent_id = 1
         self.agents.clear()

@@ -10,7 +10,8 @@
         <!-- 设置相机位置，调整合适角度后通过浏览器终端的 map.getCameraPos() 获取 -->
         <!-- <camera x="0" y="0" z="-30"/> -->
     </scene>
-    <geometry>
+    <!-- scale 用于缩放仿真场景，行人大小固定，调整场景大小可改变行人在场景中的显示大小 -->
+    <geometry scale="1.0">
         <floor>
             <outwall>
                 <wall>
@@ -42,7 +43,7 @@
     </geometry>
     <agents>
         <!-- 优先级从上到下依次递减 -->
-        <!-- 指定具体位置 -->
+        <!-- 指定具体位置 (用的较少)-->
         <custom>
             <vertex px="0" py="0"/>
         </custom>
