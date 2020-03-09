@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <CrowdSimulation>
-    <scene>
+    <scene scale="1.0" gridsize="0.6">
         <!-- 墙壁属性 -->
         <floorwall thickness="0.3" />
         <roomwall thickness="0.2" />
@@ -25,12 +25,12 @@
     <parameters>
         <gridsize value="0.3"/>
     </parameters>
-    <agents>
+    <agents sum='inf'>
         <!-- 优先级从上到下依次递减 -->
         <!-- 指定具体位置 -->
-        <custom>
+        <!-- <custom>
             <vertex px="0" py="0"/>
-        </custom>
+        </custom> -->
     </agents>
 </CrowdSimulation>
 

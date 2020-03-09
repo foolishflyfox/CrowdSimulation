@@ -2,6 +2,7 @@ import os.path
 import xml.dom.minidom
 import json
 import random
+import sys
 from flask import render_template
 
 from pysim.utils import *
@@ -14,8 +15,8 @@ class Xml2JsonTranslator:
 
     def initializeTranslator(self):
         self.wall_id = 1
-        self.floorwall_thickness = 0.8
-        self.roomwall_thickness = 0.4
+        self.floorwall_thickness = 0.3
+        self.roomwall_thickness = 0.2
         self.geo_scale = 1.0
     
     # wall 是一个 xml.dom.minidom.Element 类型
@@ -158,8 +159,6 @@ class Xml2JsonTranslator:
     def GetFloorOutline(self, FuncAreas):
         dots = []
         for FuncArea in FuncAreas:
-            # print("funcarea :", FuncArea['Outline'][0][0])
-            # print('aaaa:', FuncArea['Outline'][0][0])
             i = 0
             t_outline = FuncArea['Outline'][0][0]
             while i < len(t_outline):
@@ -175,7 +174,6 @@ class Xml2JsonTranslator:
     def CreateFloor(self, FuncAreas):
         Floor = {"_id":1, "Name":"F1", "High":5, "FuncAreas":[],
             "PubPoint":[]}
-        # print(FuncAreas)
         for FuncArea in FuncAreas:
             Floor['FuncAreas'].append(FuncArea)
         Floor['Outline'] = [[self.GetFloorOutline(Floor['FuncAreas'])]]
@@ -200,10 +198,15 @@ class Xml2JsonTranslator:
     # tag: 解析 xml 中的 agents
     def parseAgents(self, agents):
         agents_config = {
+            'sum': 0,
             'custom': [],
             'room': [],
-            'floor': []
+            'area': []
         }
+        if agents.getAttribute('sum')=='inf':
+            agents_config['sum'] = sys.maxsize
+        elif agents.getAttribute('sum'):
+            agents_config['sum'] = int(agents.getAttribute('sum'))
         # 解析手动设置的agent
         customs = agents.getElementsByTagName('custom')
         for custom in customs:
@@ -211,6 +214,31 @@ class Xml2JsonTranslator:
                 px = float(vertex.getAttribute('px'))*self.geo_scale
                 py = float(vertex.getAttribute('py'))*self.geo_scale
                 agents_config['custom'].append((px, py))
+        xml_areas = agents.getElementsByTagName('area')
+        for xml_area in xml_areas:
+            area_obj = {
+                'left': float(xml_area.getAttribute('left'))*self.geo_scale,
+                'right': float(xml_area.getAttribute('right'))*self.geo_scale,
+                'bottom': float(xml_area.getAttribute('bottom'))*self.geo_scale,
+                'top': float(xml_area.getAttribute('top'))*self.geo_scale
+            }
+            if xml_area.getAttribute('count')=='inf':
+                area_obj['count'] = sys.maxsize
+            elif xml_area.getAttribute('count'):
+                area_obj['count'] = int(xml_area.getAttribute('count'))
+            else:
+                area_obj['count'] = 0
+            agents_config['area'].append(area_obj)
+        xml_rooms = agents.getElementsByTagName('room')
+        for xml_room in xml_rooms:
+            room_obj = {'id': xml_room.getAttribute('roomid')}
+            if xml_room.getAttribute('count')=='inf':
+                room_obj['count'] = sys.maxsize
+            elif xml_room.getAttribute('count'):
+                room_obj['count'] = int(xml_room.getAttribute('count'))
+            else:
+                room_obj['count'] = 0
+            agents_config['room'].append(room_obj)
         return agents_config
 
     # tag: 解析 ini.xml 文件，生成 geo.json 文件
@@ -220,13 +248,16 @@ class Xml2JsonTranslator:
 
         dom = xml.dom.minidom.parse(inipath)
         sim = dom.documentElement
-        geometry = sim.getElementsByTagName('geometry')[0]
-        if geometry.getAttribute('scale'):
-            self.geo_scale = float(geometry.getAttribute('scale'))
         
         xml_scene = None
         if len(sim.getElementsByTagName('scene')):
             xml_scene = sim.getElementsByTagName('scene')[0]
+        if xml_scene:
+            if xml_scene.getAttribute('scale'):
+                self.geo_scale = float(xml_scene.getAttribute('scale'))
+            if xml_scene.getAttribute('gridsize'):
+                self.scene_manager.SetGridSize(float(xml_scene.getAttribute('gridsize')))
+            
         if xml_scene and len(xml_scene.getElementsByTagName('floorwall')):
             floorwall = xml_scene.getElementsByTagName('floorwall')[0]
             s = floorwall.getAttribute('thickness')
@@ -235,15 +266,8 @@ class Xml2JsonTranslator:
             roomwall = xml_scene.getElementsByTagName('roomwall')[0]
             s = roomwall.getAttribute('thickness')
             if s!='': self.roomwall_thickness = float(s)
-
-        if len(sim.getElementsByTagName('parameters')):
-            parameter = sim.getElementsByTagName('parameters')[0]
-            if len(parameter.getElementsByTagName('gridsize')):
-                gridsize = parameter.getElementsByTagName('gridsize')[0]
-                s_size = gridsize.getAttribute('value')
-                if s_size:
-                    self.scene_manager.SetGridSize(float(s_size))
-        
+       
+        geometry = sim.getElementsByTagName('geometry')[0]
         floor = geometry.getElementsByTagName('floor')[0]
 
         FuncAreas = []
@@ -297,14 +321,12 @@ class Xml2JsonTranslator:
         for i in range(len(outline)):
             outline[i] *= (1+margin_rate)
         Floor['Outline'][0][0] = outline
-        # print(Floor)
         # 调整 Floor 的 High 属性以改变墙的高度
         Floor['High'] = min(xlen, ylen)*scale/50
 
         Floors.append(Floor)
 
         result['data']['building'] = self.CreateBuilding(xml_scene)
-        # print(json.dumps(result, indent=2))
         with open(outpath, 'w') as output:
             json.dump(result, output, indent=2)
 

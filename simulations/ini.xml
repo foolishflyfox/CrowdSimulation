@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <CrowdSimulation>
-    <scene>
-        <!-- 墙壁属性 -->
-        <floorwall thickness="1" />
-        <roomwall thickness="0.5" />
-
-        <gridsize value="0.3"/>
+    <!-- scale 用于缩放仿真场景，行人大小固定，调整场景大小可改变行人在场景中的显示大小 -->
+    <!-- 因为 gridsize 用于确定行人分布目的，与行人相关，不受scale影响 -->
+    <scene scale="1.0" gridsize="0.3">
         <!-- 设置相机位置，调整合适角度后通过浏览器终端的 map.getCameraPos() 获取 -->
         <!-- <camera x="0" y="0" z="-30"/> -->
     </scene>
-    <!-- scale 用于缩放仿真场景，行人大小固定，调整场景大小可改变行人在场景中的显示大小 -->
-    <geometry scale="1.0">
+    
+    <geometry>
         <floor>
             <outwall>
                 <wall>
@@ -22,6 +19,7 @@
                 </transition>
             </outwall>
             
+            <!-- id 不一定是数字，可以是字符串 -->
             <room id="1">
                 <wall thickness="0.7">
                     <vertex px="20" py="10"/>
@@ -41,19 +39,18 @@
             </goals>
         </floor>
     </geometry>
-    <agents>
-        <!-- 优先级从上到下依次递减 -->
-        <!-- 指定具体位置 (用的较少)-->
+    <!-- sum 为行人总数，真实的行人数不大于该值，不设置表示由其内部元素推导，
+                inf表示使agent数量最大化 -->
+    <agents sum="inf">
+        <!-- 指定具体位置 (用的较少)，指定方式和自动生成不能同时使用-->
         <custom>
             <vertex px="0" py="0"/>
         </custom>
         <!-- 自动生成 -->
-        <!-- 指定房间的特定区域进行填充，不指定count表示最密集状态 -->
-        <auto typename="room" roomid="1"/>
-        <!-- 指定房间进行填充，不指定count表示最密集状态 -->
-        <auto typename="room" roomid="1" count="5" xmin="-10" ymin="-10" xmax="10" ymax="10"/>
-        <!-- 如果类型为 floor，整个楼进行填充，不指定count表示最密集状态 -->
-        <auto typename="floor" count="50"/>
+        <!-- 指定房间的特定区域进行填充 inf表示使agent数量最大化-->
+        <room roomid="1" count="5"/>
+        <!-- 指定区域进行填充，inf表示使agent数量最大化 -->
+        <area left="-10" bottom="-10" right="10" top="10" count="5"/>
     </agents>
 </CrowdSimulation>
 

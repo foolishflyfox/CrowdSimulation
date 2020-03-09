@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <CrowdSimulation>
-    <scene>
-        <floorwall thickness="1" />
-        <roomwall thickness="0.5" />
+    <scene scale="1.0" gridsize="0.6">
+        <floorwall thickness="0.4" />
+        <roomwall thickness="0.3" />
     </scene>
     <geometry>
         <floor>
@@ -37,6 +37,8 @@
             </goals>
         </floor>
     </geometry>
+    <agents sum='50'>
+    </agents>
 
 </CrowdSimulation>
 

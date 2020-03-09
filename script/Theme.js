@@ -42,7 +42,7 @@ var default2dTheme = {
                 result['color'] = "#e8a53a";
                 break;
             case "obstacle":
-                result['color'] = "#f9423d";
+                result['color'] = "#a8834d";
                 break;
             case "mid_goal":
                 result['color'] = "#c0cbff"

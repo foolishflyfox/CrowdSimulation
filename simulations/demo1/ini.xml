@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <CrowdSimulation>
-    <scene>
-        <!-- 墙壁属性 -->
-        <floorwall thickness="0.3" />
-        <roomwall thickness="0.3" />
+    <scene scale="0.5" gridsize="0.6">
         <camera x="278" y="381" z="339"/>
     </scene>
     <geometry scale="0.35">
@@ -83,15 +80,15 @@
         </floor>
     </geometry>
 
-    <agents>
-        <custom>
+    <agents sum='30'>
+        <!-- <custom>
             <vertex px="0" py="0"/>
-        </custom>
-        <!-- 自动生成 -->
+        </custom> -->
+        <!-- 配置为自动产生 agent -->
         <!-- 指定房间的特定区域进行填充，不指定count表示最密集状态 -->
         <!-- <auto typename="room" roomid="1"/> -->
         <!-- 指定房间进行填充，不指定count表示最密集状态 -->
-        <!-- <auto typename="room" roomid="1" count="5" xmin="-10" ymin="-10" xmax="10" ymax="10"/> -->
+        <!-- <auto typename="room" roomid="1" count="5" top="10" bottom="-10" left="-10" right="10"/> -->
         <!-- 如果类型为 floor，整个楼进行填充，不指定count表示最密集状态 -->
         <!-- <auto typename="floor" count="50"/> -->
     </agents>
