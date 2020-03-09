@@ -9,10 +9,13 @@ from pysim.SceneManager import SceneManager
 
 class Xml2JsonTranslator:
     def __init__(self, scene_manager):
+        self.scene_manager = scene_manager
+        self.initializeTranslator()
+
+    def initializeTranslator(self):
         self.wall_id = 1
         self.floorwall_thickness = 0.8
         self.roomwall_thickness = 0.4
-        self.scene_manager = scene_manager
         self.geo_scale = 1.0
     
     # wall 是一个 xml.dom.minidom.Element 类型
@@ -311,6 +314,7 @@ class Xml2JsonTranslator:
     
 
     def map_xml2json(self, simname, showtype=True):
+        self.initializeTranslator()
         self.scene_manager.initializeScene()
         self.wall_id = 1
         simdir = f"./simulations/{simname}"
