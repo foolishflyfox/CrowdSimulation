@@ -22,7 +22,7 @@
             
             <!-- id 不一定是数字，可以是字符串 -->
             <room id="1">
-                <wall thickness="0.7">
+                <wall>
                     <vertex px="20" py="10"/>
                 </wall>
                 <crossing>

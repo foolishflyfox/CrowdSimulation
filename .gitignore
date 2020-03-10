@@ -1,6 +1,7 @@
 **/__pycache__
 simulations/**/*.json
 **/test.*
+**/.DS_Store
 
 
 

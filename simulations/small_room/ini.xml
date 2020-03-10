@@ -22,9 +22,6 @@
             
         </floor>
     </geometry>
-    <parameters>
-        <gridsize value="0.3"/>
-    </parameters>
     <agents sum='inf'>
         <!-- 优先级从上到下依次递减 -->
         <!-- 指定具体位置 -->
