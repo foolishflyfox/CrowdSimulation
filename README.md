@@ -134,8 +134,11 @@
 左图为 *scale=1.0* 的结果，发现其中的行人(红点)太小，调整 *scale=0.3* 的效果如右图所示。
 
 - *scene* -> *gridsize* 用于指定初始化行人位置时行人间的最小间距，设置 `<agents sum="inf">` 表示最大化行人数，然后调节 *gridsize* 查看效果：
+
 ![gridsize attribute 2D](readme_imgs/xml_gridsize2D.png)
+
 其中左边为 `grid=1.2` 的情形，右边为 `grid=2.4` 的情形。当然，这些设置在3D场景中也是同样有效的。下面的两张图分别为对应的3D图。
+
 ![gridsize attribute 3D](readme_imgs/xml_gridsize3D.png)
 
 
