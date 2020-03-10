@@ -1,5 +1,8 @@
 # 人群仿真web显示
 
+**Author:** *Huabin Feng*
+**Email:** *hbfeng@mail.ustc.edu.cn*
+
 ## 系统要求
 
 - python3
