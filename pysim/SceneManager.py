@@ -28,6 +28,7 @@ class SceneManager:
 
     def initializeScene(self):
         self.floor_outline = None
+        self.room_outlines = {}
         self.obstacle_bounds = []
         self.obstacle_outlines = []
         self.init_lock = Lock()
@@ -48,6 +49,8 @@ class SceneManager:
         self.scale = scale
     def SetFloorOutline(self, floor_outline):
         self.floor_outline = floor_outline
+    def AddRoomOutline(self, room_id, room_outline):
+        self.room_outlines[room_id] = room_outline
     def AddObstacleBound(self, obstacle_bounds):
         self.obstacle_bounds += obstacle_bounds
     def AddObstacleOutline(self, obstacle_outline):
@@ -111,16 +114,56 @@ class SceneManager:
                 })
                 agent_id += 1
         else:
-            choose_grids = []
+            choose_grids = set()
             free_grids = set([i for i in range(len(self.grids))])
-            # room 和 area 取走相应的位置
-
+            # tag: room 和 area 取走相应的位置
+            area_infos = []
+            for room_cfg in self.agents_config['room']:
+                room_id = room_cfg['id']
+                if room_id not in self.room_outlines:
+                    continue
+                area_infos.append({
+                    "path": Path(self.room_outlines[room_id]),
+                    "count": room_cfg['count'],
+                    "grid_index": []
+                })
+            for area_cfg in self.agents_config['area']:
+                left = area_cfg['left']
+                right = area_cfg['right']
+                bottom = area_cfg['bottom']
+                top = area_cfg['top']
+                area_infos.append({
+                    "path": Path([(left, bottom), (right, bottom), 
+                                (right, top), (left, top)]),
+                    "count": area_cfg['count'],
+                    "grid_index": []
+                })
+            for i in range(len(area_infos)):
+                for j in range(len(self.grids)):
+                    x = self.grids[j].x
+                    y = self.grids[j].y
+                    if area_infos[i]['path'].contains_point((x, y)):
+                        area_infos[i]['grid_index'].append(j)
+            for i in range(len(area_infos)):
+                while area_infos[i]['count']>0 and len(area_infos[i]['grid_index']):
+                    t = random.randint(0, len(area_infos[i]['grid_index'])-1)
+                    grid_index = area_infos[i]['grid_index'][t]
+                    choose_grids.add(grid_index)
+                    if grid_index in free_grids:
+                        free_grids.remove(grid_index)
+                    del area_infos[i]['grid_index'][t]
+                    area_infos[i]['count'] -= 1
+                for grid_index in area_infos[i]['grid_index']:
+                    if grid_index in free_grids:
+                        free_grids.remove(grid_index)
+                    
             # 其他位置
+            self.agents_config['sum'] -= len(choose_grids)
             free_grids = list(free_grids)
             while len(free_grids)>0 and self.agents_config['sum']>0:
                 self.agents_config['sum'] -= 1
                 t = random.randint(0, len(free_grids)-1)
-                choose_grids.append(free_grids[t])
+                choose_grids.add(free_grids[t])
                 del free_grids[t]
 
             for i in choose_grids:

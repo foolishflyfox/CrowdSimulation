@@ -141,6 +141,45 @@
 
 ![gridsize attribute 3D](readme_imgs/xml_gridsize3D.png)
 
+### 行人初始化配置
+
+行人初始化配置包括用户自定义与系统自动配置，下面是 *simulations/triangle-hall* 不同自动配置方式的效果：
+
+![agents](readme_imgs/agent_cfg.png)
+
+左上图配置：
+```xml
+<agents>
+    <room id="test1" count="inf"/>
+    <room id="2" count="10"/>
+    <area left="-22" bottom="13" right="-15" top="16" count="inf"/>
+</agents>
+```
+右上图配置：
+```xml
+<agents sum="inf">
+    <room id="test1" count="10"/>
+    <room id="2" count="0"/>
+    <area left="-22" bottom="13" right="-15" top="16" count="0"/>
+</agents>
+```
+左下图配置：
+```xml
+<agents sum="20">
+    <room id="test1" count="5"/>
+    <room id="2" count="5"/>
+    <area left="-22" bottom="13" right="-15" top="16" count="2"/>
+</agents>
+```
+右下图：
+```xml
+<agents sum="20">
+    <room id="test1" count="10"/>
+    <room id="2" count="100"/>
+    <area left="-22" bottom="13" right="-15" top="16" count="1"/>
+</agents>
+```
+
 
 
 

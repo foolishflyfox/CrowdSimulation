@@ -73,7 +73,7 @@ class Xml2JsonTranslator:
         wall_bounds = []
         json_obstacle = {}
         json_obstacle['Open'] = False
-        obstacle_outline = []
+        obstacle_outline = [(float('inf'), float('inf'))]
         points = []
         for vertex in obstacle.getElementsByTagName('vertex'):
             points.append(float(vertex.getAttribute('px'))*self.geo_scale)
@@ -82,6 +82,7 @@ class Xml2JsonTranslator:
             if len(points)>2:
                 wall_bounds.append((points[-4], points[-3]))
                 wall_bounds.append((points[-2], points[-1]))
+            
 
         if len(points)>4 and (points[0]!=points[-2] or points[1]!=points[-1]):
             wall_bounds.append((points[-2], points[-1]))
@@ -112,7 +113,7 @@ class Xml2JsonTranslator:
                     px = float(tv.getAttribute('px'))
                     py = float(tv.getAttribute('py'))
                     vertexs.append((px, py))
-                    if (px, py) != floor_outline[-1]:
+                    if (px*self.geo_scale, py*self.geo_scale) != floor_outline[-1]:
                         floor_outline.append((px*self.geo_scale, py*self.geo_scale))
                 for i in range(1, len(vertexs)):
                     wall_obj = {'id': self.wall_id}
@@ -175,7 +176,7 @@ class Xml2JsonTranslator:
             json_goals.append(goal_funcarea)
         return json_goals
 
-    # 求FuncAreas的外边界
+    # 求FuncAreas的外边界(一个长方形)
     def GetFloorOutline(self, FuncAreas):
         dots = []
         for FuncArea in FuncAreas:
@@ -189,6 +190,28 @@ class Xml2JsonTranslator:
         # result = GetLosseMaxRect(dots)
         result = GetMaxRect(dots)
         return result
+    # 求 room 的外边界(返回room的真实图形)
+    def GetRoomOutline(self, xml_room):
+        room_outline = [(float('inf'), float('inf'))]
+        xml_obj = xml_room.firstChild
+        while xml_obj:
+            if xml_obj.nodeName == 'wall':
+                wall = xml_obj
+                for tv in wall.getElementsByTagName('vertex'):
+                    px = float(tv.getAttribute('px'))
+                    py = float(tv.getAttribute('py'))
+                    if (px*self.geo_scale, py*self.geo_scale) != room_outline[-1]:
+                        room_outline.append((px*self.geo_scale, py*self.geo_scale))
+            elif xml_obj.nodeName == 'crossing':
+                crossing = xml_obj
+                for tv in crossing.getElementsByTagName('vertex'):
+                    px = float(tv.getAttribute('px'))
+                    py = float(tv.getAttribute('py'))
+                    if (px*self.geo_scale, py*self.geo_scale) != room_outline[-1]:
+                        room_outline.append((px*self.geo_scale, py*self.geo_scale))
+            xml_obj = xml_obj.nextSibling
+        del room_outline[0]
+        return room_outline
 
     # 构建 Floor 对象
     def CreateFloor(self, FuncAreas):
@@ -251,7 +274,7 @@ class Xml2JsonTranslator:
             agents_config['area'].append(area_obj)
         xml_rooms = agents.getElementsByTagName('room')
         for xml_room in xml_rooms:
-            room_obj = {'id': xml_room.getAttribute('roomid')}
+            room_obj = {'id': xml_room.getAttribute('id')}
             if xml_room.getAttribute('count')=='inf':
                 room_obj['count'] = sys.maxsize
             elif xml_room.getAttribute('count'):
@@ -293,6 +316,7 @@ class Xml2JsonTranslator:
         FuncAreas = []
 
         for room in floor.getElementsByTagName('room'):
+            room_id = room.getAttribute('id')
             walls = room.getElementsByTagName('wall')
             for wall in walls:
                 wall_funcareas = self.parseRoomWall(wall)
@@ -301,6 +325,8 @@ class Xml2JsonTranslator:
             for crossing in crossings:
                 json_crossing = self.parseCrossing(crossing)
                 FuncAreas.append(json_crossing)
+            room_outline = self.GetRoomOutline(room)
+            self.scene_manager.AddRoomOutline(room_id, room_outline)
 
         for obstacle in floor.getElementsByTagName('obstacle'):
             json_obstacle = self.parseObstacle(obstacle)
