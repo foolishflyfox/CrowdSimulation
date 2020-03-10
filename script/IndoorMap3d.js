@@ -620,6 +620,8 @@ IndoorMap3d = function(mapdiv){
         let sphereMat = new THREE.MeshBasicMaterial({
             color: 0xFF0000, wireframe: false
         });
+        let sphereGeo = new THREE.SphereGeometry(_this.agent_radius, 40, 40);
+        let sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
         for(let i=0; i<agents['values'].length; ++i){
             agent = agents['values'][i]
             let id = agent[0];
@@ -629,8 +631,9 @@ IndoorMap3d = function(mapdiv){
                 _this.agents[id].position.set(px, py, 0);
             }else{
                 // 参数: radius widthSegments HeightSegments
-                let sphereGeo = new THREE.SphereGeometry(_this.agent_radius, 40, 40);
-                _this.agents[id] = new THREE.Mesh(sphereGeo, sphereMat);
+                // let sphereGeo = new THREE.SphereGeometry(_this.agent_radius, 40, 40);
+                // _this.agents[id] = new THREE.Mesh(sphereGeo, sphereMat);
+                _this.agents[id] = sphereMesh.clone();
                 _this.agents[id].position.set(px, py, _this.agent_radius);
                 _this.mall.floors[0].add(_this.agents[id]);
             }
