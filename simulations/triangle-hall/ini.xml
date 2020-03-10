@@ -22,9 +22,13 @@
 
             <obstacle>
                 <vertex px="10" py="0"/>
+                <vertex px="2.5" py="2.5"/>
                 <vertex px="0" py="10"/>
+                <vertex px="-2.5" py="2.5"/>
                 <vertex px="-10" py="0"/>
+                <vertex px="-2.5" py="-2.5"/>
                 <vertex px="0" py="-10"/>
+                <vertex px="2.5" py="-2.5"/>
             </obstacle>
 
             <goals>
@@ -37,7 +41,7 @@
             </goals>
         </floor>
     </geometry>
-    <agents sum='50'>
+    <agents sum='inf'>
     </agents>
 
 </CrowdSimulation>

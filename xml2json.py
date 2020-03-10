@@ -22,6 +22,7 @@ class Xml2JsonTranslator:
     # wall 是一个 xml.dom.minidom.Element 类型
     def parseRoomWall(self, wall):
         funcareas = []
+        wall_bounds = []
         cur_thickness = self.roomwall_thickness
         if wall.getAttribute('thickness')!='':
             cur_thickness = float(wall.getAttribute('thickness'))
@@ -47,8 +48,13 @@ class Xml2JsonTranslator:
                 (p2[0]-dv[0])*self.geo_scale, (p2[1]-dv[1])*self.geo_scale,
                 (p1[0]-dv[0])*self.geo_scale, (p1[1]-dv[1])*self.geo_scale
             ]
+            wall_bounds.append((points[0], points[1]))
+            wall_bounds.append((points[2], points[3]))
+            wall_bounds.append((points[6], points[7]))
+            wall_bounds.append((points[4], points[5]))
             wall_obj['Outline'] = [[points]]
             funcareas.append(wall_obj)
+        self.scene_manager.AddObstacleBound(wall_bounds)
         return funcareas
 
     # crossings 是不同 subroom 之间的通路
@@ -62,15 +68,29 @@ class Xml2JsonTranslator:
             json_crossing['Outline'][0][0].append(py)
         return json_crossing
 
+    # tag: 解析 obstacle
     def parseObstacle(self, obstacle):
+        wall_bounds = []
         json_obstacle = {}
         json_obstacle['Open'] = False
+        obstacle_outline = []
         points = []
         for vertex in obstacle.getElementsByTagName('vertex'):
             points.append(float(vertex.getAttribute('px'))*self.geo_scale)
             points.append(float(vertex.getAttribute('py'))*self.geo_scale)
+            obstacle_outline.append((points[-2], points[-1]))
+            if len(points)>2:
+                wall_bounds.append((points[-4], points[-3]))
+                wall_bounds.append((points[-2], points[-1]))
+
+        if len(points)>4 and (points[0]!=points[-2] or points[1]!=points[-1]):
+            wall_bounds.append((points[-2], points[-1]))
+            wall_bounds.append((points[0], points[1]))
         json_obstacle['type'] = "obstacle"
         json_obstacle['Outline'] = [[points]]
+        self.scene_manager.AddObstacleOutline(obstacle_outline)
+        # TODO: wall_bounds 添加有问题
+        self.scene_manager.AddObstacleBound(wall_bounds)
         return json_obstacle
 
     # tag: 解析 xml 中的 outwall
@@ -79,7 +99,7 @@ class Xml2JsonTranslator:
         cur_thickness = self.floorwall_thickness
         xml_obj = outwall.firstChild
         floor_outline = [(float('inf'), float('inf'))]
-        wall_obstacles = []
+        wall_bounds = []
         while xml_obj:
             if xml_obj.nodeName == 'wall':
                 wall = xml_obj
@@ -110,10 +130,10 @@ class Xml2JsonTranslator:
                         (p2[0]-dv[0])*self.geo_scale, (p2[1]-dv[1])*self.geo_scale,
                         (p1[0]-dv[0])*self.geo_scale, (p1[1]-dv[1])*self.geo_scale
                     ]
-                    wall_obstacles.append((points[0], points[1]))
-                    wall_obstacles.append((points[2], points[3]))
-                    wall_obstacles.append((points[6], points[7]))
-                    wall_obstacles.append((points[4], points[5]))
+                    wall_bounds.append((points[0], points[1]))
+                    wall_bounds.append((points[2], points[3]))
+                    wall_bounds.append((points[6], points[7]))
+                    wall_bounds.append((points[4], points[5]))
                     wall_obj['Outline'] = [[points]]
                     funcareas.append(wall_obj)
             elif xml_obj.nodeName == 'transition':
@@ -131,7 +151,7 @@ class Xml2JsonTranslator:
             xml_obj = xml_obj.nextSibling
         del floor_outline[0]
         self.scene_manager.SetFloorOutline(floor_outline)
-        self.scene_manager.AddObstacleOutlines(wall_obstacles)
+        self.scene_manager.AddObstacleBound(wall_bounds)
         return funcareas
 
     def parseGoals(self, goals):

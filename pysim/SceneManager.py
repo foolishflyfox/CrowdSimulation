@@ -1,5 +1,5 @@
 from matplotlib.path import Path
-from .utils import GetMaxRect, MaxRectBound
+from .utils import *
 from threading import Lock
 import random
 
@@ -28,9 +28,10 @@ class SceneManager:
 
     def initializeScene(self):
         self.floor_outline = None
+        self.obstacle_bounds = []
         self.obstacle_outlines = []
         self.init_lock = Lock()
-        self.gridsize = 1.0
+        self.gridsize = 0.6
         self.grids = []
         # scene 的移动和缩放参数
         self.xcenter = 0.0
@@ -47,16 +48,21 @@ class SceneManager:
         self.scale = scale
     def SetFloorOutline(self, floor_outline):
         self.floor_outline = floor_outline
-    def AddObstacleOutlines(self, obstacle_outlines):
-        self.obstacle_outlines += obstacle_outlines
+    def AddObstacleBound(self, obstacle_bounds):
+        self.obstacle_bounds += obstacle_bounds
+    def AddObstacleOutline(self, obstacle_outline):
+        self.obstacle_outlines.append(obstacle_outline)
     def SetGridSize(self, size):
-        self.gridsize = size
+        self.gridsize = max(size, self.gridsize)
     # tag: 场景网格化
     def GridScene(self):
         self.max_rect = GetMaxRect(self.floor_outline)
         top, bottom, left, right = MaxRectBound(self.max_rect)
         px, py = left+self.gridsize, top-self.gridsize
         path_floor_outline = Path(self.floor_outline)
+        path_obstacle_outlines = []
+        for obstacle_outline in self.obstacle_outlines:
+            path_obstacle_outlines.append(Path(obstacle_outline))
         while py+0.000001 > bottom+self.gridsize:
             px = left+self.gridsize
             while px-0.000001 <= right-self.gridsize:
@@ -65,8 +71,25 @@ class SceneManager:
                     px += self.gridsize
                     continue
                 # 条件2：不在 obstacle 内
-
-                # 条件3：与obstacle和wall的不重叠
+                in_obstacle = False
+                for path_obstacle_outline in path_obstacle_outlines:
+                    if path_obstacle_outline.contains_point((px, py)):
+                        in_obstacle = True
+                        break
+                if in_obstacle:
+                    px += self.gridsize
+                    continue
+                # 条件3：与obstacle和wall的距离不能太近
+                close_to_wall = False
+                for i in range(1, len(self.obstacle_bounds), 2):
+                    lineP1 = self.obstacle_bounds[i-1]
+                    lineP2 = self.obstacle_bounds[i]
+                    if ShortestDist(lineP1, lineP2, (px, py)) < 0.75*self.gridsize:
+                        close_to_wall = True
+                        break
+                if close_to_wall:
+                    px += self.gridsize
+                    continue
 
                 self.grids.append(Grid(px, py))
                 px += self.gridsize

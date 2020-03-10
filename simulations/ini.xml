@@ -3,7 +3,8 @@
 <CrowdSimulation>
     <!-- scale 用于缩放仿真场景，行人大小固定，调整场景大小可改变行人在场景中的显示大小 -->
     <!-- 因为 gridsize 用于确定行人分布目的，与行人相关，不受scale影响 -->
-    <scene scale="1.0" gridsize="0.3">
+    <!-- gridsize 小于0.6的视为无效 -->
+    <scene scale="1.0" gridsize="0.6">
         <!-- 设置相机位置，调整合适角度后通过浏览器终端的 map.getCameraPos() 获取 -->
         <!-- <camera x="0" y="0" z="-30"/> -->
     </scene>
