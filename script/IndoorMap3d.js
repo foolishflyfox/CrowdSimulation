@@ -28,7 +28,7 @@ IndoorMap3d = function(mapdiv){
 
     // key 为 agent_id, value 为 THREE.SphereGeometry 对象
     this.agents = {};
-    this.agent_radius = 1.0;
+    this.agent_radius = 0.5
 
     this.agentStateChanged = false;
 

@@ -73,7 +73,7 @@ class Xml2JsonTranslator:
         wall_bounds = []
         json_obstacle = {}
         json_obstacle['Open'] = False
-        obstacle_outline = [(float('inf'), float('inf'))]
+        obstacle_outline = []
         points = []
         for vertex in obstacle.getElementsByTagName('vertex'):
             points.append(float(vertex.getAttribute('px'))*self.geo_scale)
@@ -82,15 +82,12 @@ class Xml2JsonTranslator:
             if len(points)>2:
                 wall_bounds.append((points[-4], points[-3]))
                 wall_bounds.append((points[-2], points[-1]))
-            
-
         if len(points)>4 and (points[0]!=points[-2] or points[1]!=points[-1]):
             wall_bounds.append((points[-2], points[-1]))
             wall_bounds.append((points[0], points[1]))
         json_obstacle['type'] = "obstacle"
         json_obstacle['Outline'] = [[points]]
         self.scene_manager.AddObstacleOutline(obstacle_outline)
-        # TODO: wall_bounds 添加有问题
         self.scene_manager.AddObstacleBound(wall_bounds)
         return json_obstacle
 
@@ -159,6 +156,7 @@ class Xml2JsonTranslator:
         json_goals = []
         goals = goals.getElementsByTagName('goal')
         for goal in goals:
+            goal_outline = []
             goal_funcarea = {}
             if goal.getAttribute('id'):
                 goal_funcarea['_id'] = int(goal.getAttribute('id'))
@@ -172,8 +170,10 @@ class Xml2JsonTranslator:
             for vertex in goal.getElementsByTagName('vertex'):
                 points.append(float(vertex.getAttribute('px'))*self.geo_scale)
                 points.append(float(vertex.getAttribute('py'))*self.geo_scale)
+                goal_outline.append((points[-2], points[-1]))
             goal_funcarea['Outline'][0].append(points)
             json_goals.append(goal_funcarea)
+            self.scene_manager.AddGoalOutline(goal_outline)
         return json_goals
 
     # 求FuncAreas的外边界(一个长方形)

@@ -1,7 +1,6 @@
 # 人群仿真web显示
 
-**Author:** *Huabin Feng*
-**Email:** *hbfeng@mail.ustc.edu.cn*
+**Author:** *Huabin Feng*  <br>  **Email:** *hbfeng@mail.ustc.edu.cn*
 
 ## 系统要求
 
