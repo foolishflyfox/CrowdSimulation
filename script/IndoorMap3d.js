@@ -654,6 +654,14 @@ IndoorMap3d = function(mapdiv){
         }
     }
 
+    this.LoadRoute = function(){
+        console.log("3D scene don't support LoadRoute function");
+    }
+
+    this.SetRoute = function(web_route){
+        console.log("3D scene don't support SetRoute function");
+    }
+
     _this.init();
     animate();
 

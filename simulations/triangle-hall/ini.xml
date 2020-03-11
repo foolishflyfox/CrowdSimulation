@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <CrowdSimulation>
-    <scene scale="1.0" gridsize="0.6">
+    <scene scale="0.5" gridsize="0.6">
     </scene>
     <geometry>
         <floor>
@@ -9,6 +9,14 @@
                 <wall>
                     <vertex px="25" py="3"/>
                     <vertex px="-25" py="25"/>
+                    <vertex px="-25" py="-16"/>
+                </wall>
+                <transition>
+                    <vertex px="-25" py="-16"/>
+                    <vertex px="-25" py="-18"/>
+                </transition>
+                <wall>
+                    <vertex px="-25" py="-18"/>
                     <vertex px="-25" py="-25"/>
                     <vertex px="25" py="-3"/>
                 </wall>
@@ -60,16 +68,22 @@
                 <goal>
                     <vertex px="25" py="2"/>
                     <vertex px="25" py="-2"/>
-                    <vertex px="30" py="-2"/>
-                    <vertex px="30" py="2"/>
+                    <vertex px="28" py="-2"/>
+                    <vertex px="28" py="2"/>
+                </goal>
+                <goal>
+                    <vertex px="-25" py="-16"/>
+                    <vertex px="-25" py="-18"/>
+                    <vertex px="-27" py="-18"/>
+                    <vertex px="-27" py="-16"/>
                 </goal>
             </goals>
         </floor>
     </geometry>
-    <agents sum="20">
-        <room id="test1" count="5"/>
-        <room id="2" count="5"/>
-        <area left="-22" bottom="13" right="-15" top="16" count="2"/>
+    <agents sum="inf">
+        <!-- <room id="test1" count="5"/> -->
+        <!-- <room id="2" count="5"/> -->
+        <!-- <area left="-22" bottom="13" right="-15" top="16" count="2"/> -->
     </agents>
 
 </CrowdSimulation>

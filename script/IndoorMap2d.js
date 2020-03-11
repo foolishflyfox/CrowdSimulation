@@ -300,10 +300,27 @@ IndoorMap2d = function(mapdiv){
     this.SetAgents = function(agents) {
         let _curFloor = _this.mall.getCurFloor();
         if(_curFloor==null){
-            alert('请选择具体楼层');
+            alert('SetAgents Function: 请选择具体楼层');
             return;
         }
         _curFloor['agents']= agents;
+        _this.agentStateChanged = true;
+    }
+
+    this.SetRoute = function(web_route){
+        let _curFloor = _this.mall.getCurFloor();
+        if(_curFloor==null){
+            alert('SetRoute Function: 请选择具体楼层');
+            return;
+        }
+        _curFloor['route'] = web_route;
+        _this.agentStateChanged = true;
+    }
+
+    this.ClearRoute = function(){
+        let _curFloor = _this.mall.getCurFloor();
+        if(_curFloor==null) return;
+        delete _curFloor['route']
         _this.agentStateChanged = true;
     }
 
@@ -326,6 +343,10 @@ IndoorMap2d = function(mapdiv){
         }else if(control_btn.innerText=="Pause"){
             control_btn.innerText = "Start";
         }
+    }
+
+    this.LoadRoute = function(){
+        websocket.emit('sim_event', {'name': 'load_route'})
     }
 
     _this.init();
@@ -390,6 +411,26 @@ Canvas2DRenderer = function (map) {
     this.domElement = _canvas;
     this.mapCenter = [];
     var _devicePixelRatio = 1;
+
+    // 求向量的单位法向量
+    function unitNormalVector(x1, y1, x2, y2){
+        let dx = x2-x1;
+        let dy = y2-y1;
+        if(dx==0 && dy==0){
+            return [0, 0];
+        }
+        let normal_len = (dx*dx + dy*dy)**0.5;
+        return [dy/normal_len, -dx/normal_len];
+    }
+    // 求点A到点B，分割比例为split_rate位置的坐标
+    function splitLine(Ax, Ay, Bx, By, split_rate){
+        return [Bx*split_rate+(1-split_rate)*Ax,
+                By*split_rate+(1-split_rate)*Ay];
+    }
+    // 求AB的长度
+    function getLineLength(Ax, Ay, Bx, By){
+        return ((Ax-Bx)*(Ax-Bx)+(Ay-By)*(Ay-By))**0.5;
+    }
 
     function _init(){
         _canvas.style.position = "absolute";
@@ -630,6 +671,41 @@ Canvas2DRenderer = function (map) {
             }
         }
 
+        let web_route = _curFloor['route'];
+        if(web_route){
+            _ctx.strokeStyle = "#FF0000";
+            _ctx.fillStyle = "#FF0000"
+            for(let i=0; i+3<web_route.length; i+=4){
+                let x1 = web_route[i];
+                let y1 = web_route[i+1];
+                let nx1 = ((x1-this.mapCenter[0])*_scale)>>0;
+                let ny1 = ((y1-this.mapCenter[1])*_scale)>>0;
+                let x2 = web_route[i+2];
+                let y2 = web_route[i+3];
+                let nx2 = ((x2-this.mapCenter[0])*_scale)>>0;
+                let ny2 = ((y2-this.mapCenter[1])*_scale)>>0;
+                // 绘制路由箭头
+                _ctx.beginPath();
+                _ctx.moveTo(nx1, -ny1);
+                _ctx.lineTo(nx2, -ny2);
+                // _ctx.closePath();
+                _ctx.stroke();
+                // 绘制三角形
+                let unit_norm = unitNormalVector(nx1, ny1, nx2, ny2);
+                let split_point = splitLine(nx1, ny1, nx2, ny2, 0.75);
+                let tlen = getLineLength(split_point[0], split_point[1], nx2, ny2)*0.7;
+                let nx3 = split_point[0]+tlen*unit_norm[0];
+                let ny3 = split_point[1]+tlen*unit_norm[1];
+                let nx4 = split_point[0]-tlen*unit_norm[0];
+                let ny4 = split_point[1]-tlen*unit_norm[1];
+                _ctx.beginPath();
+                _ctx.moveTo(nx2, -ny2);
+                _ctx.lineTo(nx3, -ny3);
+                _ctx.lineTo(nx4, -ny4);
+                _ctx.closePath();
+                _ctx.fill();
+            }
+        }
 
 
         ////test for selection

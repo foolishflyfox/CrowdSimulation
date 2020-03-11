@@ -182,6 +182,17 @@
 </agents>
 ```
 
+# 辅助操作
+
+## map.LoadRoute
+
+该函数是浏览器端调试模式使用的函数(chrome 按 F12 或者是 “右键”->“检查” 打开调试模式)，在 Console 中输入 `map.LoadRoute()` 即可显示路由信息，如下图所示，用箭头表示路由方向：
+
+![route](readme_imgs/route.png)
+
+通过这种方式可以查看是否存在路由错误。
+
+通过 `map.ClearRoute()` 可以清除路由信息。**注意：路由信息只有在 2D 场景下才可以显示。**
 
 
 

@@ -43,6 +43,9 @@
         websocket.on('load_agents', function(web_agents){
             map.SetAgents(web_agents)
         });
+        websocket.on('load_route', function(web_route){
+            map.SetRoute(web_route);
+        });
         // map.showAreaNames(true).setSelectable(true);
         var ul = IndoorMap.getUI(map);
         document.body.appendChild(ul);

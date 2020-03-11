@@ -50,6 +50,9 @@ def handle_my_custom_event(event):
     if(event['name']=='load_agents'):
         web_agents= scene_manager.GetAgents()
         emit('load_agents', web_agents)
+    elif(event['name']=='load_route'):
+        web_route = scene_manager.GetRoute()
+        emit('load_route', web_route)
 
 
 socketio.run(app, host='0.0.0.0', port=8080, debug=True)

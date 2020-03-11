@@ -78,3 +78,25 @@ def ShortestDist(LinePoint1, LinePoint2, Point3):
     shortest_point = ShortestPoint(LinePoint1, LinePoint2, Point3)
     vec = tuple(p-p3 for p, p3 in zip(shortest_point, Point3))
     return ScalarProduct(vec, vec)**0.5
+
+# 判断线段AB与线段CD是否相交
+def IsIntersected(A, B, C, D):
+    Ax, Ay = A
+    Bx, By = B
+    Cx, Cy = C
+    Dx, Dy = D
+    # 快速排斥
+    if min(Ax,Bx)>max(Cx,Dx) or max(Ax,Bx)<min(Cx,Dx) or \
+        min(Ay,By)>max(Cy,Dy) or max(Ay,By)<min(Cy,Dy):
+        return False
+    # 跨立实验
+    eps = 1e-9
+    # ac = (Cx-Ax)*(By-Ay)-(Cy-Ay)*(Bx-Ax)
+    ac=(Cx-Ax)*(By-Ay)-(Cy-Ay)*(Bx-Ax)
+    ad=(Dx-Ax)*(By-Ay)-(Dy-Ay)*(Bx-Ax)
+    ca=(Ax-Cx)*(Dy-Cy)-(Ay-Cy)*(Dx-Cx)
+    cb=(Bx-Cx)*(Dy-Cy)-(By-Cy)*(Dx-Cx)
+    if ac*ad<eps and ca*cb<eps:
+        return True
+    return False
+

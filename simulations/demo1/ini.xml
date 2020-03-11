@@ -4,7 +4,7 @@
     <scene scale="0.5" gridsize="0.6">
         <camera x="278" y="381" z="339"/>
     </scene>
-    <geometry scale="0.35">
+    <geometry>
         <floor>
             <outwall>
                 <wall>
@@ -80,7 +80,7 @@
         </floor>
     </geometry>
 
-    <agents sum='30'>
+    <agents sum='inf'>
         <!-- <custom>
             <vertex px="0" py="0"/>
         </custom> -->

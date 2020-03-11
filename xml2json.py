@@ -55,6 +55,7 @@ class Xml2JsonTranslator:
             wall_obj['Outline'] = [[points]]
             funcareas.append(wall_obj)
         self.scene_manager.AddObstacleBound(wall_bounds)
+        self.scene_manager.AddIndoorWall(wall_bounds)
         return funcareas
 
     # crossings 是不同 subroom 之间的通路
@@ -89,6 +90,7 @@ class Xml2JsonTranslator:
         json_obstacle['Outline'] = [[points]]
         self.scene_manager.AddObstacleOutline(obstacle_outline)
         self.scene_manager.AddObstacleBound(wall_bounds)
+        self.scene_manager.AddIndoorWall(wall_bounds)
         return json_obstacle
 
     # tag: 解析 xml 中的 outwall
