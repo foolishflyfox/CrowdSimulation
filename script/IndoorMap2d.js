@@ -340,13 +340,21 @@ IndoorMap2d = function(mapdiv){
             websocket.emit('sim_event', {'name':'load_agents'});
         }else if(control_btn.innerText=="Start"){
             control_btn.innerText = "Pause";
+            // console.log('interval =', _this.interval);
+            websocket.emit('sim_event', {'name':'start_sim', 'interval':_this.interval});
         }else if(control_btn.innerText=="Pause"){
             control_btn.innerText = "Start";
+            websocket.emit('sim_event', {'name':'pause_sim'})
         }
     }
 
     this.LoadRoute = function(){
-        websocket.emit('sim_event', {'name': 'load_route'})
+        websocket.emit('sim_event', {'name': 'load_route'});
+    }
+
+    this.UpdateSimState = function(sim_state){
+        // console.log(sim_state);
+        this.dom_duration.innerText = sim_state['timer']
     }
 
     _this.init();

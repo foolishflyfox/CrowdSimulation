@@ -53,7 +53,14 @@ def handle_my_custom_event(event):
     elif(event['name']=='load_route'):
         web_route = scene_manager.GetRoute()
         emit('load_route', web_route)
+    elif(event['name']=='start_sim'):
+        # scene_manager.interval = event['interval']
+        scene_manager.StartSimulate(event['interval'], socketio)
+    elif(event['name']=='pause_sim'):
+        scene_manager.PauseSimulate()
 
-
+# 该函数调用将会被阻塞直到按下 Ctrl+C
 socketio.run(app, host='0.0.0.0', port=8080, debug=True)
+
+print("Web App Closed")
 

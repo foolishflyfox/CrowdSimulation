@@ -627,6 +627,7 @@ var IndoorMap = function (params) {
     var _fullScreen = false;
     this.is3d = true;
     var _indoorMap;
+    var _interval = 0.025;
 
     //initialization
     function init(params) {
@@ -654,6 +655,10 @@ var IndoorMap = function (params) {
             }else{
                 _this.is3d = true;
             }
+
+            if(params.hasOwnProperty('interval')){
+                _interval = params.interval;
+            }
         }else{
             createMapDiv([window.innerWidth,window.innerHeight]);
             _fullScreen = true;
@@ -666,6 +671,8 @@ var IndoorMap = function (params) {
             _indoorMap = new IndoorMap2d(_mapDiv);
             _this.is3d = false;
         }
+
+        _indoorMap['interval'] = _interval;
 
         //var marker = document.createElement("image");
         //marker.style.position = "absolute";

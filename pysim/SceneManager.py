@@ -2,11 +2,46 @@ from matplotlib.path import Path
 from .utils import *
 from threading import Lock
 import random
+import threading
+import queue
+import time
 
-class Point:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+
+# tag: 用于将行人运动信息发送给客户端的线程类
+class SendStateThread(threading.Thread):
+    def __init__(self, socketio, scene_manager):
+        threading.Thread.__init__(self)
+        self.socketio = socketio
+        self.scene_manager = scene_manager
+        # self.state_queue = state_queue
+        # self.interval = interval
+        # self.timer = timer
+        self.running = True
+    def run(self):
+        while self.running:
+            # print('send state...')
+            t0 = time.time()
+            t_state = self.scene_manager.state_queue.get()
+            sleep_time = self.scene_manager.interval-(time.time()-t0)
+            self.scene_manager.timer += self.scene_manager.interval
+            self.socketio.emit('sim_state', {'timer':"%.1f s" % self.scene_manager.timer})
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+    def Pause(self):
+        self.running = False
+
+
+# tag: 用于更新行人运动状态的线程类
+class UpdateStateThread(threading.Thread):
+    def __init__(self, state_queue):
+        threading.Thread.__init__(self)
+        self.state_queue = state_queue
+    def run(self):
+        cnt = 1
+        while True:
+            self.state_queue.put(cnt)
+            cnt += 1
+
 
 class Grid:
     # 一个 Grid 为正方形，中心为(x,y)
@@ -54,6 +89,15 @@ class SceneManager:
         self.grid_xnum = 0
         self.grid_ynum = 0
         self.grid_index_dist = {}
+        # 仿真参数
+        self.interval = 25
+        self.state_queue = queue.Queue(3)
+        # 仿真线程
+        self.send_state_thread = None
+        self.update_state_thread = None
+        # 仿真时间计时器
+        self.timer = 0.0
+        
 
     def SetSceneDeformation(self, xcenter, ycenter, scale):
         self.xcenter = xcenter
@@ -309,6 +353,24 @@ class SceneManager:
     def SetAgentsConfig(self, agents_config):
         self.agents_config = agents_config
 
+    # tag: 收到客户端的 Start 消息
+    def StartSimulate(self, interval, socketio):
+        self.interval = interval
+        if(self.update_state_thread==None):
+            self.update_state_thread = UpdateStateThread(self.state_queue)
+            self.update_state_thread.start()
+
+        self.send_state_thread = SendStateThread(socketio, self)
+        self.send_state_thread.start()
+
+    # tag: 收到客户端的 Pause 消息
+    def PauseSimulate(self):
+        if self.send_state_thread:
+            self.send_state_thread.Pause()
+            # self.send_state_thread.join()
+            self.send_state_thread = None
+            print("Pause Simulation")
     
+
 
 

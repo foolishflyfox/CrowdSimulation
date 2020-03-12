@@ -649,8 +649,10 @@ IndoorMap3d = function(mapdiv){
             websocket.emit('sim_event', {'name':'load_agents'});
         }else if(control_btn.innerText=="Start"){
             control_btn.innerText = "Pause";
+            websocket.emit('sim_event', {'name':'start_sim', 'interval':_this.interval});
         }else if(control_btn.innerText=="Pause"){
             control_btn.innerText = "Start";
+            websocket.emit('sim_event', {'name':'pause_sim'})
         }
     }
 
@@ -660,6 +662,10 @@ IndoorMap3d = function(mapdiv){
 
     this.SetRoute = function(web_route){
         console.log("3D scene don't support SetRoute function");
+    }
+
+    this.UpdateSimState = function(sim_state){
+        this.dom_duration.innerText = sim_state['timer']
     }
 
     _this.init();

@@ -28,12 +28,14 @@
         // mapDiv:"indoor3d",
         // dim:"2d"
         // dim:"3d"
-        dim: "{{ showtype }}"
+        dim: "{{ showtype }}",
+        // 行人运动更新的缩进间隔，单位 s
+        interval: 0.025
     }
     var map = IndoorMap(params);
-    var file_json;
     var websocket = null;
-    file_json = "{{ datafile }}";
+    var file_json = "{{ datafile }}";
+    
     // file_json = "./simulations/T-junction/geo.json";
     map.load(file_json, function(){
         websocket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
@@ -46,6 +48,9 @@
         websocket.on('load_route', function(web_route){
             map.SetRoute(web_route);
         });
+        websocket.on('sim_state', function(sim_state){
+            map.UpdateSimState(sim_state);
+        })
         // map.showAreaNames(true).setSelectable(true);
         var ul = IndoorMap.getUI(map);
         document.body.appendChild(ul);
@@ -61,7 +66,7 @@
     <!--<li onclick="map.setTopView()">Top View</li>-->
     <li onclick="map.setDefaultView()" style="cursor: pointer;">Default View</li>
     <li onclick="map.simulationControl(this)" style="cursor: pointer;font-weight:bold;">Load Agents</li>
-    <li id="duration">00:00:00</li>
+    <li id="duration">0 s</li>
 </ul>
 </div>
 </body>
