@@ -15,13 +15,16 @@ class Agent:
         
         # agent 可以达到的最大速度 m/s
         self.vmax = 1.3
+        self.keep_rate = 1.0
         # 下面的社会力参数基于对 pedsim 的调参拟合，并非实际测定
         # 社会力因子 在 0~10 之间
-        self.factorsocialforce = 2.1
+        self.factorsocialforce = 0.3
+        self.social_alpha = 3.0
         # 障碍物因子 在 0~10 之间
-        self.factorobstacleforce = 1.0
+        self.factorobstacleforce = 1
+        self.obstacleForceSigma = 0.8
         # 驱动力因子 在 0~10之间
-        self.factordesiredforce = 1.3
+        self.factordesiredforce = 2.5
         # TODO: 该因子是否还要使用
         self.factorlookaheadforce = 1.0
 
@@ -31,7 +34,6 @@ class Agent:
         self.lookaheadforce = Vector()
         self.myforce = Vector()
 
-        self.obstacleForceSigma = 0.8
         self.agent_radius = 0.25
 
         self.reached = False
@@ -48,8 +50,9 @@ class Agent:
             + self.factorsocialforce * self.socialforce
             + self.factorobstacleforce * self.obstacleforce
             + self.factorlookaheadforce * self.lookaheadforce)
+        print(self.desiredforce, self.socialforce, self.obstacleforce, self.lookaheadforce, h)
         # 计算新的速度
-        self.v = self.v + self.a * h
+        self.v = self.keep_rate*self.v + self.a * h
         # 不能超过最大速度
         if self.v.length() > self.vmax:
             self.v = self.v.normalized()*self.vmax
@@ -65,6 +68,7 @@ class Agent:
         if self.reached: return
         if self.factorsocialforce > 0:
             neighbors = self.scene_manager.getNeighbors(self.p.x, self.p.y)
+            # print('neighbors cnt :', len(neighbors))
             self.socialforce = self.socialForce(neighbors)
         obstacles = self.scene_manager.getObstacles(self.p.x, self.p.y)
         if self.factorobstacleforce > 0 and len(obstacles) > 0:
@@ -73,6 +77,7 @@ class Agent:
     # 计算agent和下一个被分配的waypoint之间的作用力的方向(不包含大小)
     def desiredForce(self):
         destination = self.scene_manager.getDestination(self.p.x, self.p.y)
+        # print("destination :", destination, ", from :", self.p)
         if destination is None:
             self.reached = True
             return Vector(0, 0)
@@ -80,38 +85,44 @@ class Agent:
 
     def socialForce(self, neighbors):
         # 定义位置向量与速度向量的相对重要性（Moussaid-Helbing 2009）
-        lambdaImportance = 2.0
+        lambdaImportance = 1.0
         # 定义速度的互作用 （Mossaid-Helbing 2009）
         gamma = 0.35
         n = 2
         # 角度的互作用
         n_prime = 3
         force = Vector()
+
+        agent_radius = 0.25
         for other_agent in neighbors:
             # 不考虑自身对自己产生的社会力
             if other_agent.id == self.id:
                 continue
-            # 计算两个 agent 之间的位置差异
+            # # 计算两个 agent 之间的位置差异
+            # diff = other_agent.p - self.p
+            # diffDirection = diff.normalized()
+            # # 计算本agent i相对于agent j的相对速度
+            # velDiff = self.v - other_agent.v
+
+            # interactionVector = lambdaImportance * velDiff + diffDirection
+            # interactionLength = interactionVector.length()
+            # interactionDirection = interactionVector / interactionLength
+
+            # theta = interactionDirection.angleTo(diffDirection)
+            # thetaSign = 0 if theta==0 else (theta/abs(theta))
+
+            # B = gamma * interactionLength
+            # forceVelocityAmount = -math.exp(-diff.length()/B-(n_prime*B*theta)**2)
+            # forceAngleAmount = -thetaSign*math.exp(-diff.length()/B-(n*B*theta)**2)
+
+            # forceVelocity = forceVelocityAmount * interactionDirection
+            # forceAngle = forceAngleAmount * interactionDirection.leftNormalVector()
+            # force += forceVelocity + forceAngle
+
             diff = other_agent.p - self.p
             diffDirection = diff.normalized()
-            # 计算本agent i相对于agent j的相对速度
-            velDiff = self.v - other_agent.v
-
-            interactionVector = lambdaImportance * velDiff + diffDirection
-            interactionLength = interactionVector.length()
-            interactionDirection = interactionVector / interactionLength
-
-            theta = interactionDirection.angleTo(diffDirection)
-            thetaSign = 0 if theta==0 else (theta/abs(theta))
-
-            B = gamma * interactionLength
-            forceVelocityAmount = -math.exp(-diff.length()/B-(n_prime*B*theta)**2)
-            forceAngleAmount = -thetaSign*math.exp(-diff.length()/B-(n*B*theta)**2)
-
-            forceVelocity = forceVelocityAmount * interactionDirection
-            forceAngle = forceAngleAmount * interactionDirection.leftNormalVector()
-
-            force += forceVelocity + forceAngle
+            diffLength = diff.length()
+            force += -math.exp((diffLength-agent_radius)/self.social_alpha)*diffDirection
         return force
 
     # 计算最近的障碍物对本agent的作用力
@@ -127,7 +138,9 @@ class Agent:
                 min_diff = diff
         if min_diff is None: return Vector()
         distance = min_dist - self.agent_radius
-        force_amount = math.exp(-distance/self.obstacleForceSigma)
+        # print("distance with obstacle :", distance)
+        # force_amount = math.exp(-distance/self.obstacleForceSigma)
+        force_amount = math.exp(distance/self.obstacleForceSigma)
         return force_amount * min_diff.normalized()
 
 

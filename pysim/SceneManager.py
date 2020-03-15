@@ -1,5 +1,5 @@
 from matplotlib.path import Path
-from .utils import GetMaxRect, MaxRectBound, ShortestDist
+from .utils import GetMaxRect, MaxRectBound, ShortestDist, IsIntersected
 from .ped_agent import Agent
 from threading import Lock
 import random
@@ -188,7 +188,7 @@ class SceneManager:
                         close_to_wall = True
                         break
                     # tag: 向 grid 中添加临近的 obstacle
-                    if dist_to_obstacle < self.agent_radius*2:
+                    if dist_to_obstacle < self.agent_radius*4:
                         t_obstacles.append((lineP1, lineP2))
                 if close_to_wall:
                     continue
@@ -341,14 +341,6 @@ class SceneManager:
                     self.grids[ti][tj].distance = tdist
                     self.grids[ti][tj].next = (cur_i, cur_j)
                     self.grid_index_dist[(ti, tj)] = tdist
-        # 查看距离信息
-        # for i in range(self.grid_ynum):
-        #     for j in range(self.grid_xnum):
-        #         if self.grids[i][j]:
-        #             print(" %.1f " % self.grids[i][j].distance, end="")
-        #         else:
-        #             print("   ", end="")
-        #     print("")
         print("Route Finish")
 
     def GetRoute(self):
@@ -380,6 +372,14 @@ class SceneManager:
         self.InitAgents()
         self.Route()
         self.init_lock.release()
+        
+        # for i in range(self.grid_ynum):
+        #     for j in range(self.grid_xnum):
+        #         if self.grids[i][j]:
+        #             print(" %d " % len(self.grids[i][j].obstacles), end="")
+        #         else:
+        #             print("   ", end="")
+        #     print("")
 
     # tag: 设置 agents 配置
     def SetAgentsConfig(self, agents_config):
@@ -452,6 +452,7 @@ class SceneManager:
 
     def getObstacles(self, px, py):
         xindex, yindex = self.getGridIndexFromPos(px, py)
+        if self.grids[yindex][xindex] is None: return []
         return self.grids[yindex][xindex].obstacles
 
     def moveAgents(self):
@@ -459,16 +460,36 @@ class SceneManager:
             'radius': self.agent_radius*self.scale,
             'values': []
         }
+        # new_agent_grids = set()
+        agents_list = []
+        ori_index = []
         for yindex, xindex in self.agent_grids:
             agents = self.grids[yindex][xindex].agents
             for agent in agents.values():
                 agent.computeForces()
                 agent.move(self.interval)
                 if agent.reached: continue
+                agents_list.append(agent)
+                ori_index.append((yindex, xindex))
                 web_agents['values'].append((agent.id,
                     (agent.p.x-self.xcenter)*self.scale,
                     (agent.p.y-self.ycenter)*self.scale))
                 # print(agent.p.x, agent.p.y, self.xcenter, self.ycenter, self.scale)
+            self.grids[yindex][xindex].agents.clear()
+
+        # 更新 agent 所在 grid
+        self.agent_grids.clear()
+        for i in range(len(agents_list)):
+            agent = agents_list[i]
+            nxindex, nyindex = self.getGridIndexFromPos(agent.p.x, agent.p.y)
+            if nxindex>=0 and nxindex<self.grid_xnum and nyindex>=0 \
+                and nyindex<self.grid_ynum and (self.grids[nyindex][nxindex] is not None):
+                self.agent_grids.add((nyindex, nxindex))
+                self.grids[nyindex][nxindex].agents[agent.id] = agent
+            else:
+                self.agent_grids.add(ori_index[i])
+                self.grids[ori_index[i][0]][ori_index[i][1]].agents[agent.id] = agent
+        
         self.state_queue.put(web_agents)
         if len(web_agents['values'])!=0:
             return True

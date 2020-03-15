@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <CrowdSimulation>
-    <scene scale="1.0" gridsize="0.6">
+    <scene scale="0.81" gridsize="0.6">
         <camera x="119.8" y="384.0" z="300.3"/>
     </scene>
     <geometry>

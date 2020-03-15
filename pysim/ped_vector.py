@@ -139,7 +139,9 @@ class Vector:
                     self.y*math.cos(theta) + self.x*math.sin(theta))
 
     def __str__(self):
-        return f"({self.x}, {self.y})"
+        # return f"({self.x}, {self.y})"
+        return "(%.3f, %.3f)" % (self.x, self.y)
+
 
     
 

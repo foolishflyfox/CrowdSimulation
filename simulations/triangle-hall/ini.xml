@@ -9,14 +9,14 @@
                 <wall>
                     <vertex px="25" py="3"/>
                     <vertex px="-25" py="25"/>
-                    <vertex px="-25" py="-16"/>
+                    <vertex px="-25" py="-15"/>
                 </wall>
                 <transition>
-                    <vertex px="-25" py="-16"/>
-                    <vertex px="-25" py="-18"/>
+                    <vertex px="-25" py="-15"/>
+                    <vertex px="-25" py="-19"/>
                 </transition>
                 <wall>
-                    <vertex px="-25" py="-18"/>
+                    <vertex px="-25" py="-19"/>
                     <vertex px="-25" py="-25"/>
                     <vertex px="25" py="-3"/>
                 </wall>
@@ -72,17 +72,17 @@
                     <vertex px="28" py="2"/>
                 </goal>
                 <goal>
-                    <vertex px="-25" py="-16"/>
-                    <vertex px="-25" py="-18"/>
-                    <vertex px="-27" py="-18"/>
-                    <vertex px="-27" py="-16"/>
+                    <vertex px="-25" py="-15"/>
+                    <vertex px="-25" py="-19"/>
+                    <vertex px="-27" py="-19"/>
+                    <vertex px="-27" py="-15"/>
                 </goal>
             </goals>
         </floor>
     </geometry>
-    <agents sum="inf">
-        <!-- <room id="test1" count="5"/> -->
-        <!-- <room id="2" count="5"/> -->
+    <agents sum="1">
+        <room id="test1" count="10"/>
+        <!-- <room id="2" count="1"/> -->
         <!-- <area left="-22" bottom="13" right="-15" top="16" count="2"/> -->
     </agents>
 
