@@ -292,7 +292,6 @@ IndoorMap2d = function(mapdiv){
             _controls.viewChanged = false;
             _this.agentStateChanged = false;
         }
-        
     }
 
     // 和行人运动相关的函数
@@ -305,6 +304,9 @@ IndoorMap2d = function(mapdiv){
         }
         _curFloor['agents']= agents;
         _this.agentStateChanged = true;
+        if(agents['values'].length==0){
+            this.control_btn.innerText = "Finished";
+        }
     }
 
     this.SetRoute = function(web_route){
@@ -335,6 +337,7 @@ IndoorMap2d = function(mapdiv){
 
     this.simulationControl = function(control_btn){
         if(control_btn.innerText=="Load Agents"){
+            this.control_btn = control_btn
             this.dom_duration = document.getElementById('duration');
             control_btn.innerText = "Start";
             websocket.emit('sim_event', {'name':'load_agents'});
@@ -353,8 +356,11 @@ IndoorMap2d = function(mapdiv){
     }
 
     this.UpdateSimState = function(sim_state){
-        // console.log(sim_state);
+        // let agents = sim_state['values']
         this.dom_duration.innerText = sim_state['timer']
+        this.SetAgents(sim_state)
+        // this.dom_duration.innerText = (sim_state['timer'] + " " + 
+            // + " " + agents[0][0] + " " + agents[0][1] + " " + agents[0][2])
     }
 
     _this.init();

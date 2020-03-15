@@ -1,11 +1,13 @@
 from matplotlib.path import Path
-from .utils import *
+from .utils import GetMaxRect, MaxRectBound, ShortestDist
+from .ped_agent import Agent
 from threading import Lock
 import random
 import threading
 import queue
 import time
 
+# TODO: 设置了 xml 的 scale 参数之后 map.Loader 不能正常工作
 
 # tag: 用于将行人运动信息发送给客户端的线程类
 class SendStateThread(threading.Thread):
@@ -21,10 +23,12 @@ class SendStateThread(threading.Thread):
         while self.running:
             # print('send state...')
             t0 = time.time()
-            t_state = self.scene_manager.state_queue.get()
-            sleep_time = self.scene_manager.interval-(time.time()-t0)
+            web_agents = self.scene_manager.state_queue.get()
             self.scene_manager.timer += self.scene_manager.interval
-            self.socketio.emit('sim_state', {'timer':"%.1f s" % self.scene_manager.timer})
+            web_agents['timer'] = "%.1f s" % self.scene_manager.timer
+            self.socketio.emit('sim_state', web_agents)
+
+            sleep_time = self.scene_manager.interval-(time.time()-t0)
             if sleep_time > 0:
                 time.sleep(sleep_time)
     def Pause(self):
@@ -33,14 +37,14 @@ class SendStateThread(threading.Thread):
 
 # tag: 用于更新行人运动状态的线程类
 class UpdateStateThread(threading.Thread):
-    def __init__(self, state_queue):
+    def __init__(self, scene_manager):
         threading.Thread.__init__(self)
-        self.state_queue = state_queue
+        self.scene_manager = scene_manager
     def run(self):
-        cnt = 1
-        while True:
-            self.state_queue.put(cnt)
-            cnt += 1
+        # cnt = 1
+        while self.scene_manager.moveAgents():
+            pass
+        print("Simulation Finished")
 
 
 class Grid:
@@ -49,8 +53,11 @@ class Grid:
         self.distance = distance
         # 下一个格点的索引 (i, j)
         self.next = None
-        # self.x = x
-        # self.y = y
+        # 存放位于该 grid 范围的 agents，key 为agent的id
+        # value 为 Agent 类型
+        self.agents = {}
+        # 存放于该 grid 临近的 obstacles
+        self.obstacles = []
 
 # p = Path([(0,0), (0,1), (1, 1), (1,0)])
 # print(p.contains_point((0.5,0.5)))
@@ -90,13 +97,15 @@ class SceneManager:
         self.grid_ynum = 0
         self.grid_index_dist = {}
         # 仿真参数
-        self.interval = 25
-        self.state_queue = queue.Queue(3)
+        self.interval = 0.025
+        self.state_queue = queue.Queue(2/self.interval)
         # 仿真线程
         self.send_state_thread = None
         self.update_state_thread = None
         # 仿真时间计时器
         self.timer = 0.0
+        # 含有 agent 的grid的索引集合
+        self.agent_grids = set()
         
 
     def SetSceneDeformation(self, xcenter, ycenter, scale):
@@ -170,16 +179,22 @@ class SceneManager:
                     continue
                 # 条件3：与obstacle和wall的距离不能太近
                 close_to_wall = False
+                t_obstacles = []
                 for k in range(1, len(self.obstacle_bounds), 2):
                     lineP1 = self.obstacle_bounds[k-1]
                     lineP2 = self.obstacle_bounds[k]
-                    if ShortestDist(lineP1, lineP2, (px, py)) < self.agent_radius:
+                    dist_to_obstacle = ShortestDist(lineP1, lineP2, (px, py))
+                    if dist_to_obstacle < self.agent_radius:
                         close_to_wall = True
                         break
+                    # tag: 向 grid 中添加临近的 obstacle
+                    if dist_to_obstacle < self.agent_radius*2:
+                        t_obstacles.append((lineP1, lineP2))
                 if close_to_wall:
                     continue
                 self.init_poses.append((px, py))
                 self.grids[i][j] = Grid()
+                self.grids[i][j].obstacles = t_obstacles
 
     # tag: 初始化行人位置
     def InitAgents(self):
@@ -188,75 +203,86 @@ class SceneManager:
         agent_id = 1
         self.agents.clear()
         
-        if custom_poses:
-            for pos in custom_poses:
-                self.agents.append({
-                    'id': agent_id,
-                    'x': pos[0],
-                    'y': pos[1]
-                })
-                agent_id += 1
-        else:
-            choose_grids = set()
-            free_grids = set([i for i in range(len(self.init_poses))])
-            # tag: room 和 area 取走相应的位置
-            area_infos = []
-            for room_cfg in self.agents_config['room']:
-                room_id = room_cfg['id']
-                if room_id not in self.room_outlines:
-                    continue
-                area_infos.append({
-                    "path": Path(self.room_outlines[room_id]),
-                    "count": room_cfg['count'],
-                    "grid_index": []
-                })
-            for area_cfg in self.agents_config['area']:
-                left = area_cfg['left']
-                right = area_cfg['right']
-                bottom = area_cfg['bottom']
-                top = area_cfg['top']
-                area_infos.append({
-                    "path": Path([(left, bottom), (right, bottom), 
-                                (right, top), (left, top)]),
-                    "count": area_cfg['count'],
-                    "grid_index": []
-                })
-            for i in range(len(area_infos)):
-                for j in range(len(self.init_poses)):
-                    x = self.init_poses[j].x
-                    y = self.init_poses[j].y
-                    if area_infos[i]['path'].contains_point((x, y)):
-                        area_infos[i]['grid_index'].append(j)
-            for i in range(len(area_infos)):
-                while area_infos[i]['count']>0 and len(area_infos[i]['grid_index']):
-                    t = random.randint(0, len(area_infos[i]['grid_index'])-1)
-                    grid_index = area_infos[i]['grid_index'][t]
-                    choose_grids.add(grid_index)
-                    if grid_index in free_grids:
-                        free_grids.remove(grid_index)
-                    del area_infos[i]['grid_index'][t]
-                    area_infos[i]['count'] -= 1
-                for grid_index in area_infos[i]['grid_index']:
-                    if grid_index in free_grids:
-                        free_grids.remove(grid_index)
-                    
-            # 其他位置
-            self.agents_config['sum'] -= len(choose_grids)
-            free_grids = list(free_grids)
-            while len(free_grids)>0 and self.agents_config['sum']>0:
-                self.agents_config['sum'] -= 1
-                t = random.randint(0, len(free_grids)-1)
-                choose_grids.add(free_grids[t])
-                del free_grids[t]
+        # if custom_poses:
+            # for pos in custom_poses:
+            #     self.agents.append(Agent(agent_id, pos[0], pos[1]))
+            #     agent_id += 1
+        # else:
+        choose_grids = set()
+        free_grids = set([i for i in range(len(self.init_poses))])
+        # tag: room 和 area 取走相应的位置
+        area_infos = []
+        for pos in custom_poses:
+            tx = pos[0]
+            ty = pos[1]
+            left = tx-self.gridsize/2
+            right = tx+self.gridsize/2
+            top = ty+self.gridsize/2
+            bottom = ty-self.gridsize/2
+            area_infos.append({
+                "path": Path([(left, bottom), (right, bottom), 
+                            (right, top), (left, top)]),
+                "count": 1,
+                "grid_index": []
+            })
+        for room_cfg in self.agents_config['room']:
+            room_id = room_cfg['id']
+            if room_id not in self.room_outlines:
+                continue
+            area_infos.append({
+                "path": Path(self.room_outlines[room_id]),
+                "count": room_cfg['count'],
+                "grid_index": []
+            })
+        for area_cfg in self.agents_config['area']:
+            left = area_cfg['left']
+            right = area_cfg['right']
+            bottom = area_cfg['bottom']
+            top = area_cfg['top']
+            area_infos.append({
+                "path": Path([(left, bottom), (right, bottom), 
+                            (right, top), (left, top)]),
+                "count": area_cfg['count'],
+                "grid_index": []
+            })
+        for i in range(len(area_infos)):
+            for j in range(len(self.init_poses)):
+                x = self.init_poses[j][0]
+                y = self.init_poses[j][1]
+                if area_infos[i]['path'].contains_point((x, y)):
+                    area_infos[i]['grid_index'].append(j)
+        for i in range(len(area_infos)):
+            while area_infos[i]['count']>0 and len(area_infos[i]['grid_index']):
+                t = random.randint(0, len(area_infos[i]['grid_index'])-1)
+                grid_index = area_infos[i]['grid_index'][t]
+                choose_grids.add(grid_index)
+                if grid_index in free_grids:
+                    free_grids.remove(grid_index)
+                del area_infos[i]['grid_index'][t]
+                area_infos[i]['count'] -= 1
+            for grid_index in area_infos[i]['grid_index']:
+                if grid_index in free_grids:
+                    free_grids.remove(grid_index)
+                
+        # 其他位置
+        self.agents_config['sum'] -= len(choose_grids)
+        free_grids = list(free_grids)
+        while len(free_grids)>0 and self.agents_config['sum']>0:
+            self.agents_config['sum'] -= 1
+            t = random.randint(0, len(free_grids)-1)
+            choose_grids.add(free_grids[t])
+            del free_grids[t]
 
-            for i in choose_grids:
-                self.agents.append({
-                    'id': agent_id,
-                    'x': self.init_poses[i][0],
-                    'y': self.init_poses[i][1]
-                })
-                agent_id += 1
-            self.init_poses.clear()
+        for i in choose_grids:
+            t_agent = Agent(agent_id, self.init_poses[i][0], self.init_poses[i][1], self)
+            self.agents.append(t_agent)
+            i_grid = round((self.grid_top-self.init_poses[i][1])/self.gridsize)
+            j_grid = round((self.init_poses[i][0]-self.grid_left)/self.gridsize)
+            self.grids[i_grid][j_grid].agents[agent_id] = t_agent
+            agent_id += 1
+            self.agent_grids.add((i_grid, j_grid))
+
+        self.init_poses.clear()
 
 
     def GetAgents(self):
@@ -269,9 +295,9 @@ class SceneManager:
             'values': []
         }
         for agent in self.agents:
-            web_agents['values'].append((agent['id'], 
-                (agent['x']-self.xcenter)*self.scale,
-                (agent['y']-self.ycenter)*self.scale))
+            web_agents['values'].append((agent.id, 
+                (agent.p.x-self.xcenter)*self.scale,
+                (agent.p.y-self.ycenter)*self.scale))
         return web_agents
 
     def Route(self):
@@ -306,8 +332,8 @@ class SceneManager:
                     # 判断是否有障碍物阻隔
                     for k in range(1, len(self.indoor_walls), 2):
                         if IsIntersected(self.indoor_walls[k-1], self.indoor_walls[k],
-                            (self.grid_left+self.gridsize*cur_j, self.grid_top-self.gridsize*cur_i),
-                            (self.grid_left+self.gridsize*tj, self.grid_top-self.gridsize*ti)):
+                            self.getPosFromGridIndex(cur_j, cur_i),
+                            self.getPosFromGridIndex(tj, ti)):
                             is_block = True
                             break
                     if is_block:
@@ -315,11 +341,19 @@ class SceneManager:
                     self.grids[ti][tj].distance = tdist
                     self.grids[ti][tj].next = (cur_i, cur_j)
                     self.grid_index_dist[(ti, tj)] = tdist
+        # 查看距离信息
+        # for i in range(self.grid_ynum):
+        #     for j in range(self.grid_xnum):
+        #         if self.grids[i][j]:
+        #             print(" %.1f " % self.grids[i][j].distance, end="")
+        #         else:
+        #             print("   ", end="")
+        #     print("")
         print("Route Finish")
 
     def GetRoute(self):
         web_route = []
-        
+
         # f = open('t.txt', 'w')
         for i in range(0, self.grid_ynum):
             for j in range(0, self.grid_xnum):
@@ -340,8 +374,6 @@ class SceneManager:
             web_route[i+1] = (web_route[i+1]-self.ycenter)*self.scale
         return web_route
 
-
-
     def SceneInit(self):
         self.init_lock.acquire()
         self.GridScene()
@@ -357,7 +389,7 @@ class SceneManager:
     def StartSimulate(self, interval, socketio):
         self.interval = interval
         if(self.update_state_thread==None):
-            self.update_state_thread = UpdateStateThread(self.state_queue)
+            self.update_state_thread = UpdateStateThread(self)
             self.update_state_thread.start()
 
         self.send_state_thread = SendStateThread(socketio, self)
@@ -370,7 +402,78 @@ class SceneManager:
             # self.send_state_thread.join()
             self.send_state_thread = None
             print("Pause Simulation")
-    
 
+    def getGridIndexFromPos(self, x, y):
+        xindex = round((x-self.grid_left)/self.gridsize)
+        yindex = round((self.grid_top-y)/self.gridsize)
+        return xindex, yindex
+
+    def getPosFromGridIndex(self, xindex, yindex):
+        x = self.grid_left+self.gridsize*xindex
+        y = self.grid_top-self.gridsize*yindex
+        return x, y
+
+    # tag: 获取某点的目标
+    def getDestination(self, x, y):
+        xindex, yindex = self.getGridIndexFromPos(x, y)
+        if xindex<0 or xindex>=self.grid_xnum or \
+            yindex<0 or yindex>=self.grid_ynum:
+            return (x, y)
+        cur_grid = self.grids[yindex][xindex]
+        # 当前位置没有纳入规划范围(可能是不可达的)
+        if cur_grid==None:
+            return (x, y)
+        # print(xindex, yindex, cur_grid.distance)
+        # 到达目标位置
+        if cur_grid.distance==0:
+            return None
+        next_index = cur_grid.next
+        # 当前位置没有下一跳的节点
+        if next_index==None:
+            return (x, y)
+        xindex_next = next_index[1]
+        yindex_next = next_index[0]
+        return self.getPosFromGridIndex(xindex_next, yindex_next)
+
+    # 获取某点附近的 agents
+    def getNeighbors(self, px, py):
+        xindex, yindex = self.getGridIndexFromPos(px, py)
+        neighbors = []
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                ty = yindex+i
+                tx = xindex+j
+                if tx<0 or ty<0 or tx>=self.grid_xnum or ty>=self.grid_ynum:
+                    continue
+                if self.grids[ty][tx] is None:
+                    continue
+                neighbors += list(self.grids[ty][tx].agents.values())
+        return neighbors
+
+    def getObstacles(self, px, py):
+        xindex, yindex = self.getGridIndexFromPos(px, py)
+        return self.grids[yindex][xindex].obstacles
+
+    def moveAgents(self):
+        web_agents = {
+            'radius': self.agent_radius*self.scale,
+            'values': []
+        }
+        for yindex, xindex in self.agent_grids:
+            agents = self.grids[yindex][xindex].agents
+            for agent in agents.values():
+                agent.computeForces()
+                agent.move(self.interval)
+                if agent.reached: continue
+                web_agents['values'].append((agent.id,
+                    (agent.p.x-self.xcenter)*self.scale,
+                    (agent.p.y-self.ycenter)*self.scale))
+                # print(agent.p.x, agent.p.y, self.xcenter, self.ycenter, self.scale)
+        self.state_queue.put(web_agents)
+        if len(web_agents['values'])!=0:
+            return True
+        else:
+            return False
+    
 
 
