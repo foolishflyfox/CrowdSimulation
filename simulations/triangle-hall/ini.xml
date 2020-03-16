@@ -8,16 +8,16 @@
             <outwall>
                 <wall>
                     <vertex px="25" py="3"/>
-                    <vertex px="-25" py="25"/>
-                    <vertex px="-25" py="-15"/>
+                    <vertex px="-27" py="25"/>
+                    <vertex px="-27" py="-15"/>
                 </wall>
                 <transition>
-                    <vertex px="-25" py="-15"/>
-                    <vertex px="-25" py="-19"/>
+                    <vertex px="-27" py="-15"/>
+                    <vertex px="-27" py="-19"/>
                 </transition>
                 <wall>
-                    <vertex px="-25" py="-19"/>
-                    <vertex px="-25" py="-25"/>
+                    <vertex px="-27" py="-19"/>
+                    <vertex px="-27" py="-25"/>
                     <vertex px="25" py="-3"/>
                 </wall>
                 <transition>
@@ -72,16 +72,21 @@
                     <vertex px="28" py="2"/>
                 </goal>
                 <goal>
-                    <vertex px="-25" py="-15"/>
-                    <vertex px="-25" py="-19"/>
-                    <vertex px="-27" py="-19"/>
                     <vertex px="-27" py="-15"/>
+                    <vertex px="-27" py="-19"/>
+                    <vertex px="-29" py="-19"/>
+                    <vertex px="-29" py="-15"/>
                 </goal>
             </goals>
         </floor>
     </geometry>
-    <agents sum="1">
-        <room id="test1" count="10"/>
+    <agents sum="100">
+    <!-- <agents> -->
+        <!-- <custom>
+            <vertex px="-24" py="-14"/>
+            <vertex px="-22" py="-14"/>
+        </custom> -->
+        <!-- <room id="test1" count="30"/> -->
         <!-- <room id="2" count="1"/> -->
         <!-- <area left="-22" bottom="13" right="-15" top="16" count="2"/> -->
     </agents>

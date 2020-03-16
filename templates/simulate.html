@@ -35,6 +35,8 @@
     var map = IndoorMap(params);
     var websocket = null;
     var file_json = "{{ datafile }}";
+
+    var g_grid_info = null;
     
     // file_json = "./simulations/T-junction/geo.json";
     map.load(file_json, function(){
@@ -55,6 +57,15 @@
         var ul = IndoorMap.getUI(map);
         document.body.appendChild(ul);
         // map.showFloor(0);
+        websocket.on('grid_info', function(grid_info){
+            g_grid_info = grid_info;
+            for(let i in grid_info){
+                txt = (i + ": (" + grid_info[i]['xgrid'] + ", "
+                    + grid_info[i]['ygrid'] + ")   " + "(" + grid_info[i]['x']
+                    + ", " + grid_info[i]['y'] + ")")
+                console.log(txt)
+            }
+        })
     });
 
 </script>

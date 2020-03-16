@@ -15,9 +15,6 @@ class SendStateThread(threading.Thread):
         threading.Thread.__init__(self)
         self.socketio = socketio
         self.scene_manager = scene_manager
-        # self.state_queue = state_queue
-        # self.interval = interval
-        # self.timer = timer
         self.running = True
     def run(self):
         while self.running:
@@ -143,20 +140,20 @@ class SceneManager:
                 elif x > right: right = x
                 if y < bottom: bottom = y
                 elif y > top: top = y
+        # 网格元素数组初始化
         self.grid_left = left+self.gridsize
         self.grid_right = right-self.agent_radius*1.2
         self.grid_top = top-self.gridsize
         self.grid_bottom = bottom+self.agent_radius*1.2
         self.grid_xnum = int((self.grid_right-self.grid_left)/self.gridsize)+1
         self.grid_ynum = int((self.grid_top-self.grid_bottom)/self.gridsize)+1
-        # px, py = left+self.gridsize, top-self.gridsize
-        # while py+0.000001 > bottom+self.agent_radius*1.2:
         self.grids = [[None]*self.grid_xnum for i in range(self.grid_ynum)]
+
         for i in range(self.grid_ynum):
             py = self.grid_top - i*self.gridsize
             for j in range(self.grid_xnum):
                 px = self.grid_left + j*self.gridsize
-                # 判断是否在 goal 中
+                # 判断是否在 goal 中, 在 goal 中的 grid 不能为初始化位置
                 in_goal = False
                 for path_goal_outline in path_goal_outlines:
                     if path_goal_outline.contains_point((px, py)):
@@ -188,7 +185,8 @@ class SceneManager:
                         close_to_wall = True
                         break
                     # tag: 向 grid 中添加临近的 obstacle
-                    if dist_to_obstacle < self.agent_radius*4:
+                    # if dist_to_obstacle < self.agent_radius*4:
+                    if dist_to_obstacle < self.agent_radius+self.gridsize:
                         t_obstacles.append((lineP1, lineP2))
                 if close_to_wall:
                     continue
@@ -203,15 +201,11 @@ class SceneManager:
         agent_id = 1
         self.agents.clear()
         
-        # if custom_poses:
-            # for pos in custom_poses:
-            #     self.agents.append(Agent(agent_id, pos[0], pos[1]))
-            #     agent_id += 1
-        # else:
         choose_grids = set()
         free_grids = set([i for i in range(len(self.init_poses))])
-        # tag: room 和 area 取走相应的位置
+        
         area_infos = []
+        # 设置通过 custom 方式指定的行人初始化位置
         for pos in custom_poses:
             tx = pos[0]
             ty = pos[1]
@@ -225,6 +219,7 @@ class SceneManager:
                 "count": 1,
                 "grid_index": []
             })
+        # 设置通过 room 指定的行人初始化参数
         for room_cfg in self.agents_config['room']:
             room_id = room_cfg['id']
             if room_id not in self.room_outlines:
@@ -234,6 +229,7 @@ class SceneManager:
                 "count": room_cfg['count'],
                 "grid_index": []
             })
+        # 设置通过 area 指定的行人初始化参数
         for area_cfg in self.agents_config['area']:
             left = area_cfg['left']
             right = area_cfg['right']
@@ -274,10 +270,12 @@ class SceneManager:
             del free_grids[t]
 
         for i in choose_grids:
-            t_agent = Agent(agent_id, self.init_poses[i][0], self.init_poses[i][1], self)
-            self.agents.append(t_agent)
             i_grid = round((self.grid_top-self.init_poses[i][1])/self.gridsize)
             j_grid = round((self.init_poses[i][0]-self.grid_left)/self.gridsize)
+            t_agent = Agent(agent_id, self.init_poses[i][0], self.init_poses[i][1], 
+                            self, j_grid, i_grid)
+            self.agents.append(t_agent)
+            # 将 agent 加入到 grid 中, 加快附近 agent 的搜索速度
             self.grids[i_grid][j_grid].agents[agent_id] = t_agent
             agent_id += 1
             self.agent_grids.add((i_grid, j_grid))
@@ -286,7 +284,7 @@ class SceneManager:
 
 
     def GetAgents(self):
-        # 确保初始化操作已经完成
+        # 获取锁, 确保初始化操作已经完成
         self.init_lock.acquire()
         self.init_lock.release()
         web_agents = {
@@ -300,6 +298,7 @@ class SceneManager:
                 (agent.p.y-self.ycenter)*self.scale))
         return web_agents
 
+    # TODO: 添加随机化信息
     def Route(self):
         dict_calc = {(-1,1):2**0.5, (1,-1):2**0.5, (1,1): 2**0.5,
                      (-1,-1):2**0.5, (1,0):1, (0,1):1,
@@ -345,27 +344,23 @@ class SceneManager:
 
     def GetRoute(self):
         web_route = []
-
-        # f = open('t.txt', 'w')
         for i in range(0, self.grid_ynum):
             for j in range(0, self.grid_xnum):
                 if self.grids[i][j]!=None and self.grids[i][j].next!=None:
                     next_i = self.grids[i][j].next[0]
                     next_j = self.grids[i][j].next[1]
-                    # print(i, j, next_i, next_j, file=f)
                     # 方向起始坐标
                     web_route.append(self.grid_left+j*self.gridsize)
                     web_route.append(self.grid_top-i*self.gridsize)
                     # 方向终止坐标
                     web_route.append(self.grid_left+next_j*self.gridsize)
                     web_route.append(self.grid_top-next_i*self.gridsize)
-        # f.close()
-        # web_route = [0, 0, -2, -2, -3, -3, 0, -2]
         for i in range(0, len(web_route), 2):
             web_route[i] = (web_route[i]-self.xcenter)*self.scale
             web_route[i+1] = (web_route[i+1]-self.ycenter)*self.scale
         return web_route
 
+    # tag: 场景初始化
     def SceneInit(self):
         self.init_lock.acquire()
         self.GridScene()
@@ -414,15 +409,15 @@ class SceneManager:
         return x, y
 
     # tag: 获取某点的目标
-    def getDestination(self, x, y):
-        xindex, yindex = self.getGridIndexFromPos(x, y)
-        if xindex<0 or xindex>=self.grid_xnum or \
-            yindex<0 or yindex>=self.grid_ynum:
-            return (x, y)
+    def getDestination(self, cur_agent):
+        # xindex, yindex = self.getGridIndexFromPos(x, y)
+        xindex = cur_agent.xgrid
+        yindex = cur_agent.ygrid
+        
         cur_grid = self.grids[yindex][xindex]
         # 当前位置没有纳入规划范围(可能是不可达的)
         if cur_grid==None:
-            return (x, y)
+            return (cur_agent.x, cur_agent.y)
         # print(xindex, yindex, cur_grid.distance)
         # 到达目标位置
         if cur_grid.distance==0:
@@ -430,14 +425,16 @@ class SceneManager:
         next_index = cur_grid.next
         # 当前位置没有下一跳的节点
         if next_index==None:
-            return (x, y)
+            return (cur_agent.x, cur_agent.y)
         xindex_next = next_index[1]
         yindex_next = next_index[0]
         return self.getPosFromGridIndex(xindex_next, yindex_next)
 
     # 获取某点附近的 agents
-    def getNeighbors(self, px, py):
-        xindex, yindex = self.getGridIndexFromPos(px, py)
+    def getNeighbors(self, cur_agent):
+        # xindex, yindex = self.getGridIndexFromPos(px, py)
+        xindex = cur_agent.xgrid
+        yindex = cur_agent.ygrid
         neighbors = []
         for i in range(-1, 2):
             for j in range(-1, 2):
@@ -450,10 +447,25 @@ class SceneManager:
                 neighbors += list(self.grids[ty][tx].agents.values())
         return neighbors
 
-    def getObstacles(self, px, py):
-        xindex, yindex = self.getGridIndexFromPos(px, py)
+    def getObstacles(self, cur_agent):
+        # xindex, yindex = self.getGridIndexFromPos(px, py)
+        xindex = cur_agent.xgrid
+        yindex = cur_agent.ygrid
         if self.grids[yindex][xindex] is None: return []
         return self.grids[yindex][xindex].obstacles
+
+    def updateAgentGrid(self, cur_agent):
+        xgrid, ygrid = self.getGridIndexFromPos(cur_agent.p.x, cur_agent.p.y)
+        if cur_agent.xgrid==xgrid and cur_agent.ygrid==ygrid:
+            return
+        if xgrid<0 or xgrid>=self.grid_xnum or ygrid<0 or ygrid>=self.grid_ynum:
+            return
+        if self.grids[ygrid][xgrid] is None:
+            return
+        del self.grids[cur_agent.ygrid][cur_agent.xgrid].agents[cur_agent.id]
+        cur_agent.xgrid = xgrid
+        cur_agent.ygrid = ygrid
+        self.grids[ygrid][xgrid].agents[cur_agent.id] = cur_agent
 
     def moveAgents(self):
         web_agents = {
@@ -461,34 +473,22 @@ class SceneManager:
             'values': []
         }
         # new_agent_grids = set()
-        agents_list = []
-        ori_index = []
-        for yindex, xindex in self.agent_grids:
-            agents = self.grids[yindex][xindex].agents
-            for agent in agents.values():
-                agent.computeForces()
-                agent.move(self.interval)
-                if agent.reached: continue
-                agents_list.append(agent)
-                ori_index.append((yindex, xindex))
-                web_agents['values'].append((agent.id,
-                    (agent.p.x-self.xcenter)*self.scale,
-                    (agent.p.y-self.ycenter)*self.scale))
-                # print(agent.p.x, agent.p.y, self.xcenter, self.ycenter, self.scale)
-            self.grids[yindex][xindex].agents.clear()
+        # agents_list = []
+        # ori_index = []
 
-        # 更新 agent 所在 grid
-        self.agent_grids.clear()
-        for i in range(len(agents_list)):
-            agent = agents_list[i]
-            nxindex, nyindex = self.getGridIndexFromPos(agent.p.x, agent.p.y)
-            if nxindex>=0 and nxindex<self.grid_xnum and nyindex>=0 \
-                and nyindex<self.grid_ynum and (self.grids[nyindex][nxindex] is not None):
-                self.agent_grids.add((nyindex, nxindex))
-                self.grids[nyindex][nxindex].agents[agent.id] = agent
-            else:
-                self.agent_grids.add(ori_index[i])
-                self.grids[ori_index[i][0]][ori_index[i][1]].agents[agent.id] = agent
+        new_agents = []
+        for cur_agent in self.agents:
+            if cur_agent.reached:
+                if cur_agent.id in self.grids[cur_agent.ygrid][cur_agent.xgrid].agents:
+                    del self.grids[cur_agent.ygrid][cur_agent.xgrid].agents[cur_agent.id]
+                continue
+            cur_agent.computeForces()
+            cur_agent.move(self.interval)
+            web_agents['values'].append((cur_agent.id,
+                (cur_agent.p.x-self.xcenter)*self.scale,
+                (cur_agent.p.y-self.ycenter)*self.scale))
+            new_agents.append(cur_agent)
+        self.agents = new_agents
         
         self.state_queue.put(web_agents)
         if len(web_agents['values'])!=0:
@@ -496,5 +496,16 @@ class SceneManager:
         else:
             return False
     
+
+    def DebugGridInfo(self):
+        grid_info = {}
+        for t_agent in self.agents:
+            grid_info[t_agent.id] = {
+                'xgrid': t_agent.xgrid,
+                'ygrid': t_agent.ygrid,
+                'x': "%.2f" %t_agent.p.x,
+                'y': "%.2f" %t_agent.p.y
+            }
+        return grid_info
 
 

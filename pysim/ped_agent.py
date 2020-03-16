@@ -1,9 +1,10 @@
 from .ped_vector import Vector
 import math
-from .utils import ShortestPoint
+from .utils import ShortestPoint, ShortestDist
+import random
 
 class Agent:
-    def __init__(self, agent_id, x, y, scene_manager):
+    def __init__(self, agent_id, x, y, scene_manager, xgrid, ygrid):
         self.scene_manager = scene_manager
         self.id = agent_id
         # agent 的当前位置
@@ -12,6 +13,9 @@ class Agent:
         self.v = Vector()
         # agent 的当前加速度
         self.a = Vector()
+        # agent 所在格点
+        self.xgrid = xgrid
+        self.ygrid = ygrid
         
         # agent 可以达到的最大速度 m/s
         self.vmax = 1.3
@@ -42,20 +46,64 @@ class Agent:
         self.p.x = px
         self.p.y = py
 
+    def distToNeighbors(self):
+        dist = float('inf')
+        neighbors = self.scene_manager.getNeighbors(self)
+        for other in neighbors:
+            if other.id == self.id:
+                continue
+            dist = min(dist, (self.p-other.p).length())
+        return dist
+
+
+    # 判断是否会与附近的 obstacle 相撞
+    def isCollideToObstacle(self):
+        obstacles = self.scene_manager.getObstacles(self)
+        for obstacle in obstacles:
+            if ShortestDist(obstacle[0], obstacle[1], (self.p.x, self.p.y)) < self.agent_radius:
+                return True
+        return False
+
     def move(self, h):
         if self.reached: return
-        p_desired = self.p + self.v*h
-        self.p = p_desired
         self.a = (self.factordesiredforce*self.desiredforce
             + self.factorsocialforce * self.socialforce
             + self.factorobstacleforce * self.obstacleforce
             + self.factorlookaheadforce * self.lookaheadforce)
-        print(self.desiredforce, self.socialforce, self.obstacleforce, self.lookaheadforce, h)
         # 计算新的速度
-        self.v = self.keep_rate*self.v + self.a * h
+        # self.v = self.keep_rate*self.v + self.a * h
+        self.v = self.a * 100
         # 不能超过最大速度
         if self.v.length() > self.vmax:
             self.v = self.v.normalized()*self.vmax
+        ori_pos = self.p
+        rotate_angles = [0]
+        rotate_angles.append(math.pi*(random.randint(0, 1)-0.5)/4)
+        rotate_angles.append(rotate_angles[-1]*-1)
+        rotate_angles.append(math.pi*(random.randint(0, 1)-0.5)/2)
+        rotate_angles.append(rotate_angles[-1]*-1)
+        rotate_angles.append(math.pi*(random.randint(0, 1)-0.5))
+        rotate_angles.append(rotate_angles[-1]*-1)
+        rotate_angles.append(math.pi*(random.randint(0, 1)-0.5)/1.2)
+        rotate_angles.append(rotate_angles[-1]*-1)
+        for t_theta in rotate_angles:
+            move_vector = self.v.rotated(t_theta)*h
+            for _ in range(3):
+                pre_dist = self.distToNeighbors()
+                self.p = ori_pos + move_vector
+                if self.isCollideToObstacle():
+                    continue
+                cur_dist = self.distToNeighbors()
+                if cur_dist >= self.agent_radius * 2 or (cur_dist>=pre_dist):
+                    self.scene_manager.updateAgentGrid(self)
+                    break
+                move_vector *= 0.5
+            else:
+                continue
+                # self.p = ori_pos
+            break
+        else:
+            self.p = ori_pos
 
     # tag: 计算行人收到的合力
     def computeForces(self):
@@ -64,19 +112,19 @@ class Agent:
         self.socialforce = Vector()
         self.obstacleforce = Vector()
         self.lookaheadforce = Vector()
+        if self.reached: 
+            return
         self.desiredforce = self.desiredForce()
-        if self.reached: return
-        if self.factorsocialforce > 0:
-            neighbors = self.scene_manager.getNeighbors(self.p.x, self.p.y)
-            # print('neighbors cnt :', len(neighbors))
-            self.socialforce = self.socialForce(neighbors)
-        obstacles = self.scene_manager.getObstacles(self.p.x, self.p.y)
-        if self.factorobstacleforce > 0 and len(obstacles) > 0:
-            self.obstacleforce = self.obstacleForce(obstacles)
+        # if self.factorsocialforce > 0:
+        #     neighbors = self.scene_manager.getNeighbors(self.p.x, self.p.y)
+        #     self.socialforce = self.socialForce(neighbors)
+        # obstacles = self.scene_manager.getObstacles(self.p.x, self.p.y)
+        # if self.factorobstacleforce > 0 and len(obstacles) > 0:
+        #     self.obstacleforce = self.obstacleForce(obstacles)
 
     # 计算agent和下一个被分配的waypoint之间的作用力的方向(不包含大小)
     def desiredForce(self):
-        destination = self.scene_manager.getDestination(self.p.x, self.p.y)
+        destination = self.scene_manager.getDestination(self)
         # print("destination :", destination, ", from :", self.p)
         if destination is None:
             self.reached = True

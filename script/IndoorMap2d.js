@@ -363,6 +363,11 @@ IndoorMap2d = function(mapdiv){
             // + " " + agents[0][0] + " " + agents[0][1] + " " + agents[0][2])
     }
 
+    // 调试用函数
+    this.debugGetGridInfo = function(){
+        websocket.emit('debug_event', {'name': 'grid_info'})
+    }
+
     _this.init();
     animate();
 }
