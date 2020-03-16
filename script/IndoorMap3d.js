@@ -622,11 +622,18 @@ IndoorMap3d = function(mapdiv){
         });
         let sphereGeo = new THREE.SphereGeometry(_this.agent_radius, 40, 40);
         let sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
+        
+        let cur_agentids = new Set();
+        for(let aid in _this.agents){
+            cur_agentids.add(aid);
+        }
+        
         for(let i=0; i<agents['values'].length; ++i){
             agent = agents['values'][i]
             let id = agent[0];
             let px = agent[1];
             let py = agent[2];
+            cur_agentids.delete(id.toString());
             if(_this.agents.hasOwnProperty(id)){
                 _this.agents[id].position.set(px, py, 0);
             }else{
@@ -638,12 +645,24 @@ IndoorMap3d = function(mapdiv){
                 _this.mall.floors[0].add(_this.agents[id]);
             }
         }
+
+        cur_agentids.forEach(function(aid){
+            if(_this.agents.hasOwnProperty(aid)){
+                _this.mall.floors[0].remove(_this.agents[aid]);
+                delete _this.agents[aid];
+            }
+        })
+
         // console.log(agents);
         _this.agentStateChanged = true;
+        if(agents['values'].length==0){
+            this.control_btn.innerText = "Finished";
+        }
     }
 
     this.simulationControl = function(control_btn){
         if(control_btn.innerText=="Load Agents"){
+            this.control_btn = control_btn
             this.dom_duration = document.getElementById('duration');
             control_btn.innerText = "Start";
             websocket.emit('sim_event', {'name':'load_agents'});
@@ -666,6 +685,7 @@ IndoorMap3d = function(mapdiv){
 
     this.UpdateSimState = function(sim_state){
         this.dom_duration.innerText = sim_state['timer']
+        this.SetAgents(sim_state);
     }
 
     _this.init();

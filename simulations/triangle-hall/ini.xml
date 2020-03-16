@@ -80,7 +80,7 @@
             </goals>
         </floor>
     </geometry>
-    <agents sum="100">
+    <agents sum="30">
     <!-- <agents> -->
         <!-- <custom>
             <vertex px="-24" py="-14"/>

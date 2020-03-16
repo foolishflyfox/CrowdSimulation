@@ -65,22 +65,22 @@
             </room>
             <goals>
                 <goal>
-                    <vertex px="25" py="5"/>
-                    <vertex px="25" py="-5"/>
-                    <vertex px="30" py="-5"/>
-                    <vertex px="30" py="5"/>
+                    <vertex px="25" py="3.5"/>
+                    <vertex px="25" py="-3.5"/>
+                    <vertex px="30" py="-3.5"/>
+                    <vertex px="30" py="3.5"/>
                 </goal>
                 <goal>
-                    <vertex px="-25" py="-7.5"/>
-                    <vertex px="-25" py="0"/>
-                    <vertex px="-30" py="0"/>
-                    <vertex px="-30" py="-7.5"/>
+                    <vertex px="-25" py="-6.5"/>
+                    <vertex px="-25" py="-1"/>
+                    <vertex px="-30" py="-1"/>
+                    <vertex px="-30" py="-6.5"/>
                 </goal>
             </goals>
         </floor>
     </geometry>
 
-    <agents sum='inf'>
+    <agents sum='50'>
         <!-- <custom>
             <vertex px="0" py="0"/>
         </custom> -->

@@ -29,7 +29,7 @@
             </goals>
         </floor>
     </geometry>
-    <agents sum="1">
+    <agents sum="30">
         <!-- 优先级从上到下依次递减 -->
         <!-- 指定具体位置 -->
         <custom>
