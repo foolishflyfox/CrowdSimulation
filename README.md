@@ -101,7 +101,7 @@
             <vertex px="0" py="0"/>
         </custom>
         <!-- 自动生成 -->
-        <!-- 指定房间的特定区域进行填充 inf表示使agent数量最大化-->
+        <!-- 指定房间进行填充 inf表示使agent数量最大化-->
         <room roomid="1" count="5"/>
         <!-- 指定区域进行填充，inf表示使agent数量最大化 -->
         <area left="-10" bottom="-10" right="10" top="10" count="5"/>
