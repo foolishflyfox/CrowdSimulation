@@ -67,7 +67,7 @@ def handle_debug_request(event):
         emit('grid_info', grid_info)
 
 # 该函数调用将会被阻塞直到按下 Ctrl+C
-socketio.run(app, host='0.0.0.0', port=8080, debug=True)
+socketio.run(app, host='0.0.0.0', port=8080, debug=False)
 
 print("Web App Closed")
 

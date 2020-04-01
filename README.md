@@ -9,6 +9,23 @@
     - matplotlib
     - flask-socketio
 
+## 服务部署
+
+### 通用操作系统中部署
+
+通用操作系统包括Linux、Mac OS、Windows、Unix，安装本系统时需要在
+操作系统中预先安装Python3以及pip，为了避免与其他的Python库发生冲突，
+建议使用virtualenv构建虚拟环境后安装依赖库。
+
+部署步骤为：
+
+1. 生成虚拟环境：`virtualenv -p python3 crowdsim`；
+1. 使虚拟环境生效：在类Unix系统下使用命令 `source crowdsim/bin/activate`，在Windows系统下使用命令 `crowdsim/Scripts/activate`；
+1. 通过git获取本项目：`git clone https://github.com/foolishflyfox/CrowdSimulation.git --depth 1`，其中参数`--depth 1` 表示仅获取最新的版本而不获取所有git历史记录；
+1. 安装依赖：进入 CrowSimulation 文件夹，执行 ` pip install -r requirements.txt` 完成依赖的安装；
+1. 启动服务：执行命令 `python app.py` 即可，在浏览器中输入 `localhost:8080`即可进入仿真系统，输入CTRL+C介绍服务；
+1. 运行完成后退出虚拟环境：`deactivate`；
+
 
 ## 启动web服务
 
