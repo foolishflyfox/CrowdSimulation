@@ -6,7 +6,6 @@
 
 - python3
     - Flask
-    - matplotlib
     - flask-socketio
 
 ## 服务部署
