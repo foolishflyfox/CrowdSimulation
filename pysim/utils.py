@@ -100,3 +100,60 @@ def IsIntersected(A, B, C, D):
         return True
     return False
 
+class Path:
+    eps = 1e-6
+    PI = 3.141592653589793
+    # 判断 x 的符号
+    def dcomp(self, x):
+        x = x if x>0 else -x
+        if x < self.eps:
+            return 0
+        return 1 if x > 0 else -1
+    # points: a list of tuple
+    def __init__(self, points):
+        self.points = points
+        if self.points[0]!=self.points[-1]:
+            self.points.append(points[0])
+        Xlist = []
+        Ylist = []
+        for tx, ty in self.points:
+            Xlist.append(tx)
+            Ylist.append(ty)
+        self.maxX = max(Xlist)
+        self.minX = min(Xlist)
+        self.maxY = max(Ylist)
+        self.minY = min(Ylist)
+    # 判断 P 是否在图形内（包括边界）
+    def contains_point(self, P):
+        Px, Py = P
+        if (Px>self.maxX or Px<self.minX or
+            Py>self.maxY or Py<self.minY):
+            return False
+        # 射线法
+        count = 0
+        point1 = self.points[0]
+        for i in range(1, len(self.points)):
+            point2 = self.points[i]
+            # 如果在顶点上
+            if (P==point1) or (P==point2):
+                return True
+            if Py==min(point1[1],point2[1]):
+                point1 = point2
+                continue
+            if ((point1[1]<Py and point2[1]>=Py) or 
+                (point1[1]>=Py and point2[1]<Py)):
+                # 求水平射線跟 p1,p2 連線 之交點的 x
+                # x = p2.x - d
+                # d = a*b/c
+                # a = p2.y-Py
+                # b = p2.x - p1.x
+                # c = p2.y - p1.y
+                x = point2[0] - (point2[1] - Py) * (point2[0] - point1[0])/(point2[1] - point1[1])
+                if x < Px:
+                    count += 1
+                if x==Px:
+                    return True
+            point1 = point2
+        return count%2!=0
+            
+

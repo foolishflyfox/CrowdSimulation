@@ -1,5 +1,6 @@
-from matplotlib.path import Path
+# from matplotlib.path import Path
 from .utils import GetMaxRect, MaxRectBound, ShortestDist, IsIntersected
+from .utils import Path
 from .ped_agent import Agent
 from threading import Lock
 import random
