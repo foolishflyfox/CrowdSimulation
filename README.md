@@ -39,7 +39,7 @@
 ```sh
 docker run -d -p 60001:8080 --name crowdsim foolishflyfox/crowdsimulation
 ```
-其中60001为需要映射到本机的端口后，用户可自定义；
+其中60001为需要映射到本机的端口号，用户可自定义；
 
 #### 下载镜像并导入
 
