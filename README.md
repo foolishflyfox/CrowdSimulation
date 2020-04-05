@@ -25,6 +25,25 @@
 1. 启动服务：执行命令 `python app.py` 即可，在浏览器中输入 `localhost:8080`即可进入仿真系统，输入CTRL+C介绍服务；
 1. 运行完成后退出虚拟环境：`deactivate`；
 
+### 通过docker部署
+
+#### 通过dockerfile生成镜像
+
+在项目下有一个Dockerfile文件，进入项目根目录，执行命令`docker build -t crowdsimulation .` 即可构建一个名为crowdsimulation的镜像。
+
+通过命令：`docker run -d -p 60001:8080 --name crowdsim crowdsimulation` 启动容器，容器名为crowdsim，其中`-d`表示容器以后台形式运行，`-p 60001:8080`指定端口映射的关系，将容器中的服务端口8080映射为本机的60001端口，可以映射到其他端口。在浏览器中输入 `localhost：60001` 即可进入地图选择界面。
+
+#### 从 Docker Hub 获取
+
+通过命令 `docker pull foolishflyfox/crowdsimulation` 可直接获取镜像，启动命令为：
+```sh
+docker run -d -p 60001:8080 --name crowdsim foolishflyfox/crowdsimulation
+```
+其中60001为需要映射到本机的端口后，用户可自定义；
+
+#### 下载镜像并导入
+
+通过Docker Hub获取方式可能较慢，可以从百度云下载镜像，链接为: https://pan.baidu.com/s/1F0Jl38iy--e7x_M66H7igQ  密码:pl1d，下载后通过命令 `docker load < crowdsimulation.tar` 导入镜像，完成后通过`docker images`可以看到一个名为`foolishflyfox/crowdsimulation`的镜像。启动方式和之前的类似，不再赘述。
 
 ## 启动web服务
 
